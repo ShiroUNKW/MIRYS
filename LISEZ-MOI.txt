@@ -1,0 +1,13 @@
+SITE OFFICIEL DE MIRYS (version « la goutte de lumière ») — mise en ligne sur GitHub Pages
+
+1. Sur github.com, ouvrez votre dépôt « mirys » (compte ShiroUNKW).
+2. Supprimez les anciens fichiers et dossiers (en gardant .nojekyll), puis « Add file » › « Upload files » :
+   glissez TOUT le contenu de ce dossier (index.html, .nojekyll, img, sons).
+3. « Commit changes ». Après une à deux minutes : https://shirounkw.github.io/mirys/
+
+Liens directs (la goutte tombe directement sur la bonne présentation) :
+  #bonjour #voix #mail #messages #musique #appels #jeu #outils #formes #confiance #pub #tarif
+  ex. https://shirounkw.github.io/mirys/#tarif
+
+Avant d'annoncer : dans index.html, cherchez  const PAY_URL = '';  et collez votre lien
+Lemon Squeezy entre les apostrophes (ou envoyez-le à Claude). En attendant, « Prendre ma licence » mène au Discord.
