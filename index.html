@@ -1,0 +1,1164 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#000000">
+<meta property="og:title" content="MIRYS">
+<meta property="og:description" content="MIRYS est en veille. Réveillez-la.">
+<meta property="og:image" content="img/poster.jpg">
+<title>MIRYS</title>
+<meta name="description" content="MIRYS est en veille. Réveillez-la.">
+<link rel="icon" type="image/png" href="img/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap">
+<style>
+/* Noir complet. Une seule lumière : le voyant de MIRYS en veille. Réveillée, la lumière devient une goutte qui tombe,
+   s'écrase sur un verre noir invisible et en allume le contour. Chaque présentation vit dans un de ces verres ;
+   on passe à la suivante en faisant défiler : la lumière glisse vers le bas, éteint tout, et goutte à nouveau. */
+:root {
+  color-scheme: dark;
+  --void: #000;
+  --text: #f4f4f7;
+  --soft: rgba(244, 244, 247, 0.74);
+  --muted: rgba(244, 244, 247, 0.46);
+  --ok: #4ade80;
+  --standby: #e2eaff;
+  --liquid: cubic-bezier(0.22, 1, 0.36, 1);
+  --spring: cubic-bezier(0.2, 0.9, 0.25, 1.12);
+  --out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-soft: cubic-bezier(0.34, 1.32, 0.64, 1);
+  --land: cubic-bezier(0.3, 0.95, 0.3, 1.04);
+  --glass: linear-gradient(180deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0) 30%), linear-gradient(180deg, #050507 20%, rgba(5, 5, 7, 0.6) 100%);
+  --glass-open: radial-gradient(120% 50% at 50% -18%, rgba(255, 255, 255, 0.06), transparent 62%), linear-gradient(180deg, #050507 20%, rgba(5, 5, 7, 0.82) 100%);
+  --card: rgba(20, 20, 25, 0.86);
+  --card-sheen: linear-gradient(160deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.015) 50%, rgba(255, 255, 255, 0.04));
+  --nova: linear-gradient(135deg, #5b8cff, #a855f7);
+  --ui: "Segoe UI Variable Text", "Segoe UI", Inter, system-ui, sans-serif;
+  --display: "Segoe UI Variable Display", "Segoe UI", Inter, system-ui, sans-serif;
+  --mark: Inter, "Segoe UI", system-ui, sans-serif;
+  --ink: var(--text);
+  --mute: #8b8b96;
+}
+*, *::before, *::after { box-sizing: border-box; }
+html, body { height: 100%; }
+html { background: #000; }
+body { margin: 0; overflow: hidden; background: #000; color: var(--text); font-family: var(--ui); font-size: 15px; -webkit-font-smoothing: antialiased; touch-action: none; }
+button, input { font: inherit; color: inherit; }
+a { color: inherit; }
+svg { fill: currentColor; }
+:focus-visible { outline: 2px solid rgba(255, 255, 255, 0.6); outline-offset: 3px; }
+
+/* =====================================================================
+   L'ÎLE : reprise fidèle de MIRYS (verre fumé, reflet du contour, ressort, tailles réelles)
+   ===================================================================== */
+@property --hx { syntax: '<percentage>'; inherits: false; initial-value: 100%; }
+@property --hy { syntax: '<percentage>'; inherits: false; initial-value: 0%; }
+@property --hr { syntax: '<length>'; inherits: false; initial-value: 46px; }
+@property --pk { syntax: '<number>'; inherits: false; initial-value: 0.5; }
+@property --a { syntax: '<angle>'; initial-value: 30deg; inherits: false; }
+
+.isl { position: absolute; left: 50%; top: calc(8px * var(--k, 1)); width: 160px; height: 36px; border-radius: 18px; transform: translateX(-50%) scale(var(--k, 1)); transform-origin: 50% 0;
+  isolation: isolate; color: var(--ink); font-family: var(--ui); line-height: 1.3; user-select: none; box-shadow: 0 10px 34px rgba(0, 0, 0, 0.3);
+  transition: width 0.38s var(--spring), height 0.38s var(--spring), border-radius 0.38s ease, opacity 0.3s ease, transform 0.45s var(--spring); }
+.isl::before { content: ''; position: absolute; inset: 0; border-radius: inherit; background: var(--glass); z-index: -1; }
+.isl.open::before, .isl[data-s="compose"]::before, .isl[data-s="music"]::before { background: var(--glass-open); }
+.isl .edge { position: absolute; inset: 0; z-index: 3; border-radius: inherit; padding: 1px; pointer-events: none;
+  --hx: 100%; --hy: 0%; --hr: 46px; --pk: 0.5;
+  background:
+    radial-gradient(circle var(--hr) at var(--hx) var(--hy), rgba(255, 255, 255, var(--pk)) 0%, rgba(255, 255, 255, calc(var(--pk) * 0.4)) 40%, rgba(255, 255, 255, 0) 100%),
+    radial-gradient(circle calc(var(--hr) * 0.75) at calc(100% - var(--hx)) calc(100% - var(--hy)), rgba(255, 255, 255, calc(var(--pk) * 0.5)) 0%, rgba(255, 255, 255, 0) 100%),
+    linear-gradient(rgba(140, 140, 150, 0.15), rgba(140, 140, 150, 0.15));
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude;
+  transition: --hx 0.45s cubic-bezier(0.25, 0.8, 0.3, 1), --hy 0.45s cubic-bezier(0.25, 0.8, 0.3, 1), --hr 0.38s ease, --pk 0.35s ease; }
+.isl:not([data-s="pill"]) .edge { --hr: 70px; }
+.isl.open .edge, .isl[data-s="compose"] .edge { --hr: 120px; --pk: 0.6; }
+.isl.lit .edge { --pk: 0.72; }
+.isl .clip { position: absolute; inset: 0; border-radius: inherit; overflow: hidden; }
+.ly { position: absolute; inset: 0; display: flex; align-items: center; opacity: 0; pointer-events: none; transition: opacity 0.15s ease; }
+.isl[data-s="pill"] .ly-pill, .isl[data-s="notif"] .ly-notif, .isl[data-s="info"] .ly-info, .isl[data-s="voice"] .ly-voice, .isl[data-s="music"] .ly-music,
+.isl[data-s="compose"] .ly-compose, .isl[data-s="callin"] .ly-callin, .isl[data-s="call"] .ly-call, .isl[data-s="drop"] .ly-drop, .isl[data-s="ask"] .ly-ask,
+.isl[data-s="code"] .ly-code, .isl[data-s="file"] .ly-file, .isl[data-s="match"] .ly-match, .isl[data-s="nav"] .ly-nav
+{ opacity: 1; pointer-events: auto; transition: opacity 0.25s ease 0.15s; }
+
+/* Tailles réelles de l'appli (px avant mise à l'échelle) */
+.isl[data-s="notif"] { width: 380px; height: 68px; border-radius: 26px; }
+.isl[data-s="info"] { width: var(--bw, 380px); height: 42px; border-radius: 21px; }
+.isl[data-s="voice"] { width: 250px; height: 40px; border-radius: 20px; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.14), inset 0 0 14px rgba(255, 255, 255, 0.06), 0 0 18px rgba(255, 255, 255, 0.12), 0 8px 30px rgba(0, 0, 0, 0.45); }
+.isl[data-s="music"] { width: 420px; height: 80px; border-radius: 28px; }
+.isl[data-s="compose"] { width: 540px; height: 146px; border-radius: 30px; }
+.isl[data-s="callin"], .isl[data-s="ask"], .isl[data-s="match"] { width: 440px; height: 100px; border-radius: 28px; }
+.isl[data-s="call"] { width: 400px; height: 76px; border-radius: 27px; }
+.isl[data-s="drop"] { width: 320px; height: 72px; border-radius: 28px; }
+.isl[data-s="drop"] .edge { --pk: 0.8; --hr: 90px; }
+.isl[data-s="code"] { width: 400px; height: 104px; border-radius: 28px; }
+.isl[data-s="file"] { width: 440px; height: 118px; border-radius: 28px; }
+.isl[data-s="rond"] { width: 36px; height: 36px; border-radius: 18px; }
+.isl[data-s="hidden"] { opacity: 0; transform: translateX(-50%) scale(calc(var(--k, 1) * 0.6)); }
+
+.ly-pill { justify-content: center; gap: 8px; font-size: 13px; font-weight: 600; letter-spacing: 0.02em; font-variant-numeric: tabular-nums; }
+.dot { width: 8px; height: 8px; border-radius: 50%; background: var(--ok); box-shadow: 0 0 8px var(--ok); flex: none; }
+.isl.thinking .dot { background: #fbbf24; box-shadow: 0 0 8px #fbbf24; animation: pulse 1s ease-in-out infinite; }
+@keyframes pulse { 50% { transform: scale(1.5); opacity: 0.6; } }
+
+.ly-notif, .ly-callin, .ly-call, .ly-ask, .ly-code, .ly-match { gap: 12px; padding: 0 18px 0 12px; }
+.av { width: 44px; height: 44px; flex: none; border-radius: 50%; display: grid; place-items: center; font-size: 18px; font-weight: 700; color: #fff; background: linear-gradient(135deg, #34c759, #1f8f45); }
+.av.blue { background: linear-gradient(135deg, #5b8cff, #3159d6); }
+.av.indigo { background: linear-gradient(135deg, #6d6ff2, #4338ca); }
+.av.nuvio { background: linear-gradient(135deg, #6d8bff, #3b5bdb); }
+.nt { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.ntop { display: flex; align-items: baseline; gap: 8px; }
+.nfrom { font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.napp { margin-left: auto; flex: none; font-size: 10.5px; color: var(--mute); }
+.napp.acc { color: #a5b4fc; }
+.nbody { font-size: 12.5px; line-height: 1.3; color: rgba(255, 255, 255, 0.78); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.ly-info { justify-content: center; padding: 0 26px; font-size: 13.5px; font-weight: 600; white-space: nowrap; }
+.ly-voice canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+
+.acts { display: flex; gap: 6px; margin-top: 6px; }
+.acts span { display: inline-flex; align-items: center; height: 26px; padding: 0 12px; border-radius: 13px; font-size: 11.5px; font-weight: 600; background: rgba(255, 255, 255, 0.08); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.08); transition: transform 0.15s ease, filter 0.2s ease; }
+.acts .g { background: linear-gradient(180deg, #34c759, #1f8f45); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 4px 12px rgba(31, 143, 69, 0.35); }
+.acts .r { background: linear-gradient(180deg, #ff5a52, #d92f27); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3), 0 4px 12px rgba(217, 47, 39, 0.3); }
+.acts .w { background: #f2f2f5; color: #0b0b0f; box-shadow: inset 0 1px 0 #fff; }
+.acts span.press { transform: scale(0.9); filter: brightness(1.25); }
+.acts.pick span { cursor: pointer; }
+.acts.pick span:hover { filter: brightness(1.2); }
+
+/* Mini lecteur : la pochette diffuse ses couleurs derrière le verre */
+.ly-music { gap: 12px; padding: 0 12px 0 11px; isolation: isolate; }
+.ly-music::before { content: ''; position: absolute; inset: -40%; background: var(--art) center / cover no-repeat; filter: blur(34px) saturate(1.6); opacity: 0.42; z-index: -1; }
+.cover { width: 58px; height: 58px; flex: none; border-radius: 14px; background: var(--art) center / cover no-repeat; box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45), inset 0 0 0 1px rgba(255, 255, 255, 0.08); }
+.mt { flex: 1; min-width: 0; }
+.mt b { display: block; font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mt span { display: block; font-size: 12px; color: rgba(255, 255, 255, 0.62); }
+.prog { margin-top: 7px; height: 4px; border-radius: 2px; background: rgba(255, 255, 255, 0.14); overflow: hidden; }
+.prog i { display: block; height: 100%; width: 34%; border-radius: 2px; background: #fff; transition: width 1s linear; }
+.ctl { display: flex; gap: 2px; }
+.ctl i { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; }
+.ctl svg { width: 17px; height: 17px; fill: #fff; }
+
+/* Réponse : l'île s'ouvre, une puce « En réponse à », la barre d'écriture */
+.ly-compose { flex-direction: column; align-items: stretch; justify-content: flex-end; gap: 8px; padding: 12px 14px 14px; }
+.hint { font-size: 11.5px; color: rgba(255, 255, 255, 0.6); padding: 0 4px; }
+.rchip { align-self: flex-start; display: inline-flex; align-items: center; gap: 7px; height: 28px; padding: 0 10px 0 4px; border-radius: 14px; font-size: 12px; background: rgba(255, 255, 255, 0.07); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1); }
+.rchip .av { width: 20px; height: 20px; font-size: 10px; }
+.rchip b { font-weight: 600; }
+.rchip em { font-style: normal; opacity: 0.55; margin-left: 4px; }
+.bar { display: flex; align-items: center; gap: 10px; height: 46px; padding: 0 6px 0 16px; border-radius: 23px; background: var(--card); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.06); font-size: 13.5px; }
+.bar .tx { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; }
+.bar .tx:empty::before { content: attr(data-ph); color: rgba(255, 255, 255, 0.4); }
+.caret { display: inline-block; width: 1.5px; height: 1.1em; vertical-align: -0.18em; background: #fff; margin-left: 1px; animation: blink 1s steps(1) infinite; }
+@keyframes blink { 50% { opacity: 0; } }
+.send { width: 34px; height: 34px; flex: none; border-radius: 50%; display: grid; place-items: center; background: #f2f2f5; }
+.send svg { width: 15px; height: 15px; fill: #0b0b0f; }
+.mic svg { width: 16px; height: 16px; fill: rgba(255, 255, 255, 0.7); }
+
+/* Appel en cours */
+.cav { position: relative; width: 52px; height: 52px; flex: none; border-radius: 50%; display: grid; place-items: center; font-size: 20px; font-weight: 700; background: linear-gradient(135deg, #6d6ff2, #4338ca); box-shadow: 0 0 0 2px rgba(87, 242, 135, 0.7); animation: ring 1.6s ease-out infinite; }
+@keyframes ring { 0% { box-shadow: 0 0 0 2px rgba(87, 242, 135, 0.7), 0 0 0 0 rgba(52, 199, 89, 0.5); } 70% { box-shadow: 0 0 0 2px rgba(87, 242, 135, 0.7), 0 0 0 10px rgba(52, 199, 89, 0); } }
+.ctime { font-size: 12px; color: rgba(255, 255, 255, 0.7); display: flex; align-items: center; gap: 6px; font-variant-numeric: tabular-nums; }
+.ctime i { width: 7px; height: 7px; border-radius: 50%; background: var(--ok); }
+.cbtn { display: flex; gap: 8px; margin-left: auto; }
+.cbtn i { width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center; background: rgba(255, 255, 255, 0.08); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1); }
+.cbtn i.hang { background: linear-gradient(180deg, #ff5a52, #d92f27); box-shadow: none; }
+.cbtn svg { width: 17px; height: 17px; fill: #fff; }
+
+/* Dépôt de fichier */
+.ly-drop { justify-content: center; gap: 10px; font-size: 14px; font-weight: 600; }
+.ly-drop svg { width: 20px; height: 20px; fill: #fff; }
+.ly-file { flex-direction: column; align-items: stretch; justify-content: center; gap: 8px; padding: 12px 16px; }
+.fchip { display: flex; align-items: center; gap: 10px; font-size: 13px; font-weight: 600; }
+.fchip u { width: 30px; height: 36px; border-radius: 6px; background: linear-gradient(180deg, #ff5a52, #c4251d); display: grid; place-items: center; font-size: 8px; font-weight: 800; text-decoration: none; color: #fff; flex: none; }
+.ly-file .q { font-size: 13px; color: rgba(255, 255, 255, 0.85); }
+.ly-file .bar { height: 36px; font-size: 12px; }
+/* Code de vérification */
+.code { font-size: 22px; font-weight: 700; letter-spacing: 0.08em; font-variant-numeric: tabular-nums; margin-top: 1px; }
+
+/* Le petit rond (mode gaming) et le rond de la musique */
+.rond-art { position: absolute; inset: 2px; border-radius: 50%; background: var(--art) center / cover; opacity: 0; transition: opacity 0.3s ease 0.2s; }
+.isl[data-s="rond"] .rond-art { opacity: 0.55; }
+.orb { position: absolute; top: calc(8px * var(--k, 1)); left: 50%; width: 36px; height: 36px; border-radius: 50%; transform-origin: 0 0; transform: translateX(calc(86px * var(--k, 1))) scale(var(--k, 1)) translateX(-30px) scale(0.3); opacity: 0;
+  transition: transform 0.45s cubic-bezier(0.2, 0.9, 0.25, 1.15), opacity 0.25s ease; background: var(--glass); box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35); }
+.orb.show { opacity: 1; transform: translateX(calc(86px * var(--k, 1))) scale(var(--k, 1)); }
+.orb::after { content: ''; position: absolute; inset: 0; border-radius: 50%; padding: 1px; background: radial-gradient(circle 16px at 75% 0%, rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0.18) 45%, transparent 100%), radial-gradient(circle 12px at 25% 100%, rgba(255, 255, 255, 0.3), transparent 100%), linear-gradient(rgba(140, 140, 150, 0.16), rgba(140, 140, 150, 0.16));
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude; }
+.orb b { position: absolute; inset: 2px; border-radius: 50%; background: var(--art) center / cover; }
+.orb.playing::before { content: ''; position: absolute; inset: -3px; border-radius: 50%; background: conic-gradient(from var(--a), rgba(255, 255, 255, 0) 0deg, rgba(255, 255, 255, 0.8) 40deg, rgba(255, 255, 255, 0) 110deg); -webkit-mask: radial-gradient(circle, transparent 18px, #000 19px); mask: radial-gradient(circle, transparent 18px, #000 19px); animation: spin 2.6s linear infinite; }
+@keyframes spin { to { --a: 390deg; } }
+
+/* La goutte (dessin de l'appli) */
+.drop { position: absolute; left: 50%; top: 0; width: calc(100px * var(--k, 1)); transform: translateX(-50%); opacity: 0; transition: opacity 0.35s ease; pointer-events: none; }
+.drop.show { opacity: 1; }
+.drop svg { display: block; width: 100%; overflow: visible; }
+
+/* =====================================================================
+   ÉCRANS : un bureau Windows, la scène de MIRYS
+   ===================================================================== */
+.screen { position: relative; overflow: hidden; border-radius: 24px; background: #2a2340 url(img/wall.jpg) center / cover no-repeat; aspect-ratio: 16 / 9;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.09), 0 50px 120px -40px rgba(0, 0, 0, 0.9), 0 30px 80px -50px rgba(143, 122, 230, 0.5); --k: 1; }
+.screen::after { content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12); }
+.walls { position: absolute; inset: 0; }
+.walls i { position: absolute; inset: 0; opacity: 0; }
+.walls i.on { opacity: 1; }
+.taskbar { position: absolute; left: 50%; bottom: calc(10px * var(--k)); transform: translateX(-50%) scale(var(--k)); transform-origin: 50% 100%; display: flex; gap: 6px; padding: 7px 12px; border-radius: 12px; background: rgba(20, 18, 30, 0.55); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08); }
+.taskbar i { width: 22px; height: 22px; border-radius: 6px; background: rgba(255, 255, 255, 0.16); }
+.taskbar i:nth-child(1) { background: radial-gradient(circle at 30% 30%, #7cc4ff, #2f6fe0); }
+.taskbar i:nth-child(2) { background: linear-gradient(180deg, #ffd56b, #f0a825); }
+.taskbar i:nth-child(3) { background: linear-gradient(180deg, #8f7ae6, #5b46c9); }
+.taskbar i:nth-child(4) { background: linear-gradient(180deg, #5ee0a0, #20a86a); }
+.taskbar time { font-size: 10px; line-height: 1.1; text-align: right; color: rgba(255, 255, 255, 0.85); margin-left: 6px; font-variant-numeric: tabular-nums; }
+
+/* La carte du briefing (intro de l'appli) : verre ouvert et reflet qui fait le tour */
+.bcard { position: absolute; z-index: 4; left: 50%; top: 50%; width: 260px; height: 130px; border-radius: 32px; transform: translate(-50%, -50%) scale(var(--k)); background: var(--glass-open);
+  box-shadow: 0 20px 30px -14px rgba(0, 0, 0, 0.5), 0 6px 14px -4px rgba(0, 0, 0, 0.28); overflow: hidden; opacity: 0;
+  transition: width 0.75s cubic-bezier(0.2, 0.9, 0.22, 1.12), height 0.75s cubic-bezier(0.2, 0.9, 0.22, 1.12), opacity 0.5s ease, filter 0.6s ease, transform 0.75s cubic-bezier(0.2, 0.9, 0.22, 1.12), top 0.7s var(--land), border-radius 0.6s ease; }
+.bcard.on { opacity: 1; }
+.bcard.land { top: calc(8px * var(--k)); width: 160px !important; height: 36px !important; border-radius: 18px; transform: translate(-50%, 0) scale(var(--k)); box-shadow: 0 10px 34px rgba(0, 0, 0, 0.3); }
+.bcard.land .layer { opacity: 0; filter: blur(10px); transition-duration: 0.25s; }
+.bcard.gone { opacity: 0; transition: opacity 0.2s ease; }
+.rim { position: absolute; inset: 0; border-radius: inherit; padding: 1px; pointer-events: none; z-index: 2;
+  background: conic-gradient(from var(--a), rgba(255, 255, 255, 0) 0deg, rgba(255, 255, 255, 0.55) 38deg, rgba(255, 255, 255, 0.12) 90deg, rgba(255, 255, 255, 0) 135deg, rgba(255, 255, 255, 0) 205deg, rgba(255, 255, 255, 0.25) 240deg, rgba(255, 255, 255, 0) 290deg), linear-gradient(rgba(140, 140, 150, 0.15), rgba(140, 140, 150, 0.15));
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude; animation: spin 16s linear infinite; }
+.layer { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%) scale(0.97); opacity: 0; filter: blur(12px); white-space: nowrap; transition: opacity 0.55s ease, filter 0.6s ease, transform 0.7s var(--out); }
+.layer.show { opacity: 1; filter: none; transform: translate(-50%, -50%); transition-delay: 0.12s; }
+.layer.cut { transition: none !important; }
+.greet { text-align: center; }
+.g-small { font-size: 15px; font-weight: 500; letter-spacing: 3px; text-transform: uppercase; color: rgba(255, 255, 255, 0.5); margin-bottom: 4px; }
+.g-name { font-family: var(--display); font-size: 46px; font-weight: 650; letter-spacing: -0.5px; line-height: 1.05; }
+.binfo { display: flex; flex-direction: column; gap: 16px; }
+.weather { display: flex; align-items: center; gap: 16px; }
+.w-ico { width: 52px; height: 52px; flex: none; }
+.w-temp { font-size: 44px; font-weight: 250; letter-spacing: -1px; font-variant-numeric: tabular-nums; }
+.w-text { width: 300px; white-space: normal; font-size: 15.5px; line-height: 1.38; font-weight: 500; color: rgba(255, 255, 255, 0.86); }
+.chips { display: flex; gap: 8px; }
+.chip { display: inline-flex; align-items: center; gap: 8px; height: 32px; padding: 0 14px; border-radius: 999px; font-size: 13.5px; font-weight: 600; color: rgba(255, 255, 255, 0.88); background: rgba(255, 255, 255, 0.07); border: 1px solid rgba(255, 255, 255, 0.09); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1); }
+.chip i { width: 7px; height: 7px; border-radius: 50%; background: rgba(255, 255, 255, 0.6); }
+.chip.mail i { background: #fff; }
+
+/* Sous-titres de la voix (ce que l'on dit), en bas de l'écran */
+.said { position: absolute; left: 50%; bottom: calc(56px * var(--k)); transform: translateX(-50%) translateY(10px) scale(var(--k)); transform-origin: 50% 100%; display: flex; align-items: center; gap: 10px; padding: 9px 18px 9px 10px; border-radius: 999px;
+  background: rgba(8, 8, 12, 0.72); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12), 0 16px 40px rgba(0, 0, 0, 0.4); font-size: 14px; white-space: nowrap; opacity: 0; transition: opacity 0.3s ease, transform 0.45s var(--out); }
+.said.on { opacity: 1; transform: translateX(-50%) scale(var(--k)); }
+.said .who { width: 28px; height: 28px; border-radius: 50%; background: linear-gradient(135deg, #f7a072, #c06c84); flex: none; }
+
+.game { position: absolute; inset: 0; opacity: 0; transition: opacity 0.5s ease; background: radial-gradient(60% 70% at 30% 70%, rgba(32, 168, 140, 0.55), transparent 70%), radial-gradient(50% 60% at 80% 20%, rgba(40, 90, 200, 0.5), transparent 70%), linear-gradient(160deg, #04121a, #0a2a33 55%, #071016); }
+.game.on { opacity: 1; }
+.game::before { content: ''; position: absolute; inset: 0; background: repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.025) 0 1px, transparent 1px 64px), repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.025) 0 1px, transparent 1px 64px); }
+.game b { position: absolute; left: calc(24px * var(--k)); bottom: calc(22px * var(--k)); font-size: calc(11px * var(--k)); letter-spacing: 0.2em; color: rgba(255, 255, 255, 0.45); font-weight: 700; }
+/* Fenêtre de mail dans l'écran */
+.mwin { position: absolute; left: 50%; top: 51%; width: 470px; transform: translate(-50%, -50%) scale(calc(var(--k) * 0.98)) translateY(20px); transform-origin: 50% 50%; opacity: 0; border-radius: 22px; padding: 14px 16px 12px; background: linear-gradient(180deg, #0b0b10, rgba(11, 11, 16, 0.94)); box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.09), 0 30px 70px rgba(0, 0, 0, 0.5); transition: opacity 0.4s ease, transform 0.6s var(--out); font-size: 12.5px; }
+.mwin.on { opacity: 1; transform: translate(-50%, -50%) scale(calc(var(--k) * 0.93)); }
+.mwin h4 { margin: 0 0 8px; text-align: center; font-size: 15px; }
+.mwin .field { height: 30px; margin-bottom: 6px; }
+.mwin .mbody { min-height: 60px; padding: 10px 12px; font-size: 12px; line-height: 1.45; }
+.mwin .from { text-align: center; color: var(--mute); font-size: 10.5px; margin-bottom: 12px; }
+.field { display: flex; align-items: center; gap: 10px; height: 34px; padding: 0 12px; border-radius: 12px; background: rgba(255, 255, 255, 0.04); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.07); margin-bottom: 7px; }
+.field label { color: var(--mute); font-size: 10.5px; width: 34px; }
+.field .rchip { height: 22px; font-size: 11px; }
+.mbody { min-height: 104px; padding: 12px; border-radius: 12px; background: rgba(255, 255, 255, 0.04); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.07); white-space: pre-wrap; line-height: 1.5; color: rgba(255, 255, 255, 0.92); }
+.mbody:empty::before { content: 'Votre message…'; color: rgba(255, 255, 255, 0.35); }
+.mwin .askbar { display: flex; align-items: center; gap: 8px; margin-top: 6px; height: 32px; padding: 0 5px 0 12px; border-radius: 18px; background: rgba(110, 120, 255, 0.08); box-shadow: inset 0 0 0 1px rgba(150, 160, 255, 0.25); }
+.mwin .askbar i { width: 7px; height: 7px; border-radius: 50%; background: #8b93ff; box-shadow: 0 0 8px #8b93ff; flex: none; }
+.mwin .askbar .tx { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; }
+.mwin .askbar u { text-decoration: none; height: 26px; padding: 0 11px; border-radius: 13px; display: grid; place-items: center; font-weight: 700; font-size: 11px; background: #f2f2f5; color: #0b0b0f; transition: transform 0.15s ease; }
+.mwin .askbar u.press { transform: scale(0.9); }
+
+
+
+/* ---------- La lumière (canvas plein écran, au-dessus de tout le reste) ---------- */
+#fx { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 40; pointer-events: none; }
+
+/* ---------- Veille ---------- */
+.wake { position: fixed; inset: 0; z-index: 30; display: block; border: 0; padding: 0; background: transparent; cursor: pointer; }
+.wake span { position: absolute; left: 50%; top: calc(var(--ledy, 30vh) + 64px); transform: translateX(-50%); font-family: var(--display); font-size: clamp(15px, 1.4vw, 18px); font-weight: 400; letter-spacing: 0.32em; text-transform: uppercase; color: rgba(255, 255, 255, 0.16); white-space: nowrap; transition: color 0.6s ease, opacity 0.6s ease, letter-spacing 1.2s var(--liquid); }
+.wake:hover span, .wake:focus-visible span { color: rgba(255, 255, 255, 0.32); letter-spacing: 0.4em; }
+.wake.gone { pointer-events: none; }
+.wake.gone span { opacity: 0; letter-spacing: 0.6em; }
+
+/* ---------- Les verres ---------- */
+.pane { position: fixed; left: 50%; top: 0; z-index: 10; translate: var(--fx, 0px) var(--fy, 0px); transition: translate 1.1s cubic-bezier(0.22, 1, 0.36, 1); width: var(--pw); height: var(--ph); margin-left: calc(var(--pw) / -2); border-radius: 34px; isolation: isolate; visibility: hidden; will-change: transform; }
+.pane.live { visibility: visible; }
+.pane .glass { position: absolute; inset: 0; border-radius: inherit; overflow: hidden; background: radial-gradient(120% 60% at 50% -12%, rgba(255, 255, 255, 0.055), transparent 60%), linear-gradient(180deg, #08080b, #030304);
+  box-shadow: 0 50px 160px rgba(0, 0, 0, 0.9); -webkit-mask-image: var(--reveal, none); mask-image: var(--reveal, none); }
+.pane .sheen { position: absolute; inset: 0; z-index: 6; border-radius: inherit; pointer-events: none; background: radial-gradient(520px circle at var(--mx, 50%) var(--my, -30%), rgba(255, 255, 255, 0.05), transparent 62%); opacity: 0; transition: opacity 0.8s ease; }
+.pane.idle .sheen { opacity: 1; }
+/* Contour au repos : le reflet de MIRYS qui suit le curseur */
+.pane .ring { position: absolute; inset: 0; z-index: 7; border-radius: inherit; padding: 1px; pointer-events: none; opacity: 0; transition: opacity 0.6s ease;
+  background:
+    radial-gradient(circle var(--hr) at var(--hx) var(--hy), rgba(255, 255, 255, var(--pk)) 0%, rgba(255, 255, 255, calc(var(--pk) * 0.4)) 40%, rgba(255, 255, 255, 0) 100%),
+    radial-gradient(circle calc(var(--hr) * 0.75) at calc(100% - var(--hx)) calc(100% - var(--hy)), rgba(255, 255, 255, calc(var(--pk) * 0.45)) 0%, rgba(255, 255, 255, 0) 100%),
+    linear-gradient(rgba(150, 150, 160, 0.2), rgba(150, 150, 160, 0.2));
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude;
+  --hr: 220px; transition: opacity 0.6s ease, --hx 0.6s cubic-bezier(0.25, 0.8, 0.3, 1), --hy 0.6s cubic-bezier(0.25, 0.8, 0.3, 1), --pk 0.5s ease; }
+.pane.idle .ring { opacity: 1; }
+/* Le noir qui gagne quand la lumière s'en va */
+.pane .dim { position: absolute; inset: -72px -4px; z-index: 8; border-radius: inherit; pointer-events: none; background: var(--dim, transparent); }
+
+/* La scène à l'intérieur : un bureau qui se fond dans le noir vers les coins */
+.pane .screen { position: absolute; inset: 0; aspect-ratio: auto; border-radius: inherit; background: none; box-shadow: none; overflow: hidden; }
+.pane .screen::after { display: none; }
+.pane .wall { position: absolute; inset: 0; background: url(img/wall.jpg) center 30% / cover no-repeat; filter: brightness(0.62) saturate(1.1);
+  -webkit-mask-image: radial-gradient(ellipse 72% 78% at 52% 34%, #000 28%, rgba(0, 0, 0, 0.55) 55%, transparent 86%); mask-image: radial-gradient(ellipse 72% 78% at 52% 34%, #000 28%, rgba(0, 0, 0, 0.55) 55%, transparent 86%); }
+.pane .walls { -webkit-mask-image: radial-gradient(ellipse 72% 78% at 52% 34%, #000 28%, rgba(0, 0, 0, 0.55) 55%, transparent 86%); mask-image: radial-gradient(ellipse 72% 78% at 52% 34%, #000 28%, rgba(0, 0, 0, 0.55) 55%, transparent 86%); }
+.pane .game { -webkit-mask-image: radial-gradient(ellipse 80% 80% at 50% 35%, #000 35%, transparent 90%); mask-image: radial-gradient(ellipse 80% 80% at 50% 35%, #000 35%, transparent 90%); }
+.pane .taskbar { display: none; }
+.pane .said { top: 33%; bottom: auto; }
+.pane .bcard { top: 40%; }
+.pane .bcard.land { top: calc(8px * var(--k)); }
+.pane .mwin { left: 61%; top: 47%; }
+.pane .drop { z-index: 3; }
+
+/* Le texte de la présentation : en bas à gauche, dans le noir */
+.copy { position: absolute; z-index: 5; left: 5.5%; bottom: 8%; width: min(440px, 38%); display: flex; flex-direction: column; gap: 14px; }
+.when { display: inline-flex; align-items: center; gap: 9px; align-self: flex-start; height: 30px; padding: 0 14px 0 11px; border-radius: 15px; font-size: 12.5px; font-weight: 600; letter-spacing: 0.03em; font-variant-numeric: tabular-nums; background: var(--glass); box-shadow: inset 0 0 0 1px rgba(150, 150, 160, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.08); }
+.when i { width: 7px; height: 7px; border-radius: 50%; background: var(--ok); box-shadow: 0 0 8px var(--ok); }
+.copy h2, .plain h2 { margin: 0; font-family: var(--display); font-size: clamp(34px, 3.9vw, 58px); font-weight: 700; letter-spacing: -0.035em; line-height: 1.02; text-wrap: balance; color: #f6f6f8; }
+.copy p, .plain .lede { margin: 0; font-size: clamp(15px, 1.15vw, 17px); line-height: 1.55; color: var(--soft); text-wrap: pretty; }
+.copy .acts2 { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
+
+/* Les mots arrivent du flou, comme dans MIRYS Mail ; ils repartent dans le flou */
+.rv { opacity: 0; filter: blur(10px); transform: translateY(12px); }
+.pane.shown .rv { animation: word-in 0.95s var(--liquid) forwards; animation-delay: var(--d, 0ms); }
+.pane.leaving .rv { animation: word-out 0.5s var(--liquid) forwards; animation-delay: var(--o, 0ms); opacity: 1; filter: none; transform: none; }
+@keyframes word-in { to { opacity: 1; filter: none; transform: none; } }
+@keyframes word-out { from { opacity: 1; filter: none; transform: none; } to { opacity: 0; filter: blur(9px); transform: translateY(-10px); } }
+.w { display: inline-block; }
+
+/* Pastilles (boutons) façon MIRYS Mail */
+.pill { position: relative; display: inline-flex; align-items: center; gap: 8px; height: 40px; padding: 0 18px 0 16px; border-radius: 999px; cursor: pointer; white-space: nowrap; text-decoration: none; border: 0; color: #fff; font-weight: 600; font-size: 14px;
+  background: var(--glass); box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35); transition: transform 0.42s var(--ease-soft), box-shadow 0.45s ease; }
+.pill::before { content: ''; position: absolute; inset: 0; border-radius: inherit; padding: 1px; pointer-events: none;
+  background: radial-gradient(circle 44px at 100% 0%, rgba(255, 255, 255, 0.55) 0%, rgba(255, 255, 255, 0.2) 40%, rgba(255, 255, 255, 0) 100%), radial-gradient(circle 33px at 0% 100%, rgba(255, 255, 255, 0.28) 0%, rgba(255, 255, 255, 0) 100%), linear-gradient(rgba(140, 140, 150, 0.15), rgba(140, 140, 150, 0.15));
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude; }
+.pill:hover { transform: scale(1.04); box-shadow: 0 8px 22px rgba(0, 0, 0, 0.45); }
+.pill:active { transform: scale(0.97); }
+.pill.white { color: #0b0b0e; background: linear-gradient(180deg, #fff, #e6e6eb); box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35), 0 0 22px rgba(255, 255, 255, 0.16); }
+.pill.white::before { display: none; }
+.pill svg { width: 16px; height: 16px; flex: none; }
+.pill.sm { height: 34px; padding: 0 14px 0 12px; font-size: 13px; }
+.seg { position: relative; display: inline-flex; padding: 3px; border-radius: 999px; background-color: var(--card); background-image: var(--card-sheen); border: 1px solid rgba(255, 255, 255, 0.09); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14); }
+.seg button { position: relative; z-index: 1; height: 32px; padding: 0 15px; border: none; border-radius: 999px; background: none; color: var(--muted); cursor: pointer; font-size: 13px; font-weight: 600; transition: color 0.25s ease; }
+.seg button[aria-selected='true'] { color: #0b0b0e; font-weight: 700; }
+.seg-glow { position: absolute; top: 3px; left: 3px; height: 32px; border-radius: 999px; background: #fff; transition: transform 0.55s var(--liquid), width 0.55s var(--liquid); }
+
+/* Présentations sans bureau : texte et cartes au centre du verre */
+.plain { position: absolute; inset: 0; z-index: 5; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; padding: 6% 7%; text-align: center; }
+.plain .lede { max-width: 34em; }
+.tiles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; width: 100%; max-width: 980px; margin-top: 8px; text-align: left; }
+.tiles div { padding: 18px 18px 20px; border-radius: 22px; background-color: var(--card); background-image: var(--card-sheen); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), 0 8px 22px rgba(0, 0, 0, 0.3); }
+.tiles b { display: block; font-size: 15px; margin-bottom: 6px; }
+.tiles span { font-size: 13.5px; line-height: 1.5; color: var(--soft); }
+.price { display: flex; align-items: baseline; justify-content: center; gap: 12px; }
+.price b { font-family: var(--display); font-size: clamp(64px, 8vw, 116px); font-weight: 700; letter-spacing: -0.045em; line-height: 0.95; background: linear-gradient(180deg, #fff, #c9c9d0); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.price span { font-size: 18px; color: var(--muted); }
+.ticks { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; justify-content: center; gap: 8px 22px; color: var(--soft); font-size: 14.5px; }
+.ticks li { display: flex; align-items: center; gap: 9px; }
+.ticks li::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--ok); box-shadow: 0 0 8px var(--ok); }
+.ctas { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 4px; }
+.fine { font-size: 12.5px; color: var(--muted); }
+.vid { position: relative; width: min(860px, 100%); aspect-ratio: 16 / 9; border-radius: 22px; overflow: hidden; background: #000; box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08), 0 30px 80px rgba(0, 0, 0, 0.6); }
+.vid video { display: block; width: 100%; height: 100%; object-fit: cover; }
+.vid button { position: absolute; inset: 0; border: 0; cursor: pointer; display: grid; place-items: center; background: linear-gradient(180deg, rgba(0, 0, 0, 0.05), rgba(0, 0, 0, 0.45)); }
+.vid button span { display: inline-flex; align-items: center; gap: 10px; height: 54px; padding: 0 24px 0 18px; border-radius: 27px; font-weight: 700; color: #fff; background: var(--glass); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.2), 0 20px 50px rgba(0, 0, 0, 0.5); transition: transform 0.4s var(--ease-soft); }
+.vid button:hover span { transform: scale(1.05); }
+.vid button svg { width: 20px; height: 20px; }
+.wordmark { font-family: var(--mark); font-weight: 900; letter-spacing: 0.16em; margin-right: -0.16em; font-size: clamp(40px, 6vw, 84px); line-height: 1; background: linear-gradient(180deg, #fff 0%, #e9e9ee 40%, #8d8d98 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+
+/* ---------- Ce qui entoure le verre (discret) ---------- */
+.chrome { position: fixed; z-index: 35; opacity: 0; pointer-events: none; transition: opacity 1.2s ease; }
+body.awake .chrome { opacity: 1; pointer-events: auto; }
+.brand { left: max(26px, env(safe-area-inset-left, 0px)); top: calc(22px + env(safe-area-inset-top, 0px)); font-family: var(--mark); font-weight: 900; font-size: 13px; letter-spacing: 0.32em; color: rgba(255, 255, 255, 0.42); }
+.corner { right: max(22px, env(safe-area-inset-right, 0px)); top: calc(16px + env(safe-area-inset-top, 0px)); display: flex; gap: 8px; }
+.round { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; cursor: pointer; padding: 0; border: 1px solid rgba(255, 255, 255, 0.14); background: rgba(255, 255, 255, 0.06); color: rgba(255, 255, 255, 0.7); transition: background 0.3s ease, color 0.3s ease, transform 0.35s var(--ease-soft); }
+.round:hover { background: rgba(255, 255, 255, 0.14); color: #fff; transform: scale(1.06); }
+.round svg { width: 16px; height: 16px; }
+.dots { right: max(22px, env(safe-area-inset-right, 0px)); top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; gap: 4px; }
+.dots button { position: relative; width: 22px; height: 18px; border: 0; padding: 0; background: none; cursor: pointer; }
+.dots button::after { content: ''; position: absolute; right: 4px; top: 50%; width: 6px; height: 2px; border-radius: 1px; background: rgba(255, 255, 255, 0.22); transition: width 0.45s var(--liquid), background 0.4s ease; }
+.dots button:hover::after { background: rgba(255, 255, 255, 0.5); width: 10px; }
+.dots button[aria-current='true']::after { width: 16px; background: #fff; box-shadow: 0 0 8px rgba(255, 255, 255, 0.6); }
+.dots button span { position: absolute; right: 28px; top: 50%; transform: translateY(-50%) translateX(6px); white-space: nowrap; font-size: 12px; color: rgba(255, 255, 255, 0.7); opacity: 0; pointer-events: none; transition: opacity 0.3s ease, transform 0.4s var(--liquid); }
+.dots button:hover span { opacity: 1; transform: translateY(-50%); }
+.hint { left: 50%; bottom: calc(18px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); display: flex; align-items: center; gap: 12px; font-size: 11.5px; letter-spacing: 0.24em; text-transform: uppercase; color: rgba(255, 255, 255, 0.32); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.hint i { position: relative; width: 1px; height: 22px; overflow: hidden; background: rgba(255, 255, 255, 0.1); }
+.hint i::after { content: ''; position: absolute; left: 0; top: -60%; width: 1px; height: 60%; background: rgba(255, 255, 255, 0.8); animation: trickle 1.8s var(--liquid) infinite; }
+@keyframes trickle { to { top: 110%; } }
+body.moving .hint { opacity: 0.35; }
+
+@media (max-width: 760px) {
+  .copy { left: 6%; right: 6%; width: auto; bottom: 6%; gap: 10px; }
+  .copy h2, .plain h2 { font-size: 30px; }
+  .pane .said { top: 24%; }
+  .pane .bcard { top: 33%; }
+  .pane .bcard.land { top: calc(8px * var(--k)); }
+  .pane .mwin { left: 50%; top: 36%; }
+  .tiles { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px; }
+  .tiles div { padding: 12px; }
+  .tiles span { font-size: 12px; }
+  .plain { padding: 8% 6%; gap: 12px; }
+  .dots { display: none; }
+  .brand { display: none; }
+  .ticks { font-size: 13px; gap: 6px 14px; }
+}
+@media (max-width: 760px) and (max-height: 760px) { .tiles span { display: none; } }
+</style>
+</head>
+<body>
+<canvas id="fx" aria-hidden="true"></canvas>
+<button class="wake" id="wake" type="button" aria-label="Réveiller MIRYS"><span>Réveillez-moi</span></button>
+<div id="panes"></div>
+
+<div class="chrome brand" aria-hidden="true">MIRYS</div>
+<div class="chrome corner">
+  <a class="pill sm white" href="https://github.com/ShiroUNKW/nova-releases/releases/latest" target="_blank" rel="noopener"><svg viewBox="0 0 24 24"><path d="M12 3a1 1 0 0 1 1 1v9.6l3.3-3.3 1.4 1.4L12 17.4l-5.7-5.7 1.4-1.4 3.3 3.3V4a1 1 0 0 1 1-1zM5 19h14v2H5z"/></svg>Télécharger</a>
+  <button class="round" id="mute" type="button" aria-label="Couper le son" aria-pressed="false"><svg viewBox="0 0 24 24"><path d="M4 9v6h4l5 4V5L8 9H4zm12.5 3a4.5 4.5 0 0 0-2.5-4v8a4.5 4.5 0 0 0 2.5-4z"/></svg></button>
+</div>
+<nav class="chrome dots" id="dots" aria-label="Présentations"></nav>
+<div class="chrome hint" id="hint"><span id="count">01 / 12</span><i></i><span>Faites défiler</span></div>
+
+<script>
+(() => {
+  'use strict';
+  // Lien de paiement Lemon Squeezy : à coller ici quand il est prêt (sinon « Prendre ma licence » mène au Discord)
+  const PAY_URL = 'https://mirys-assistant.lemonsqueezy.com/checkout/buy/56bf8125-d4c7-4918-94e4-fdbec6e81162?enabled=2302239';
+  const DL = 'https://github.com/ShiroUNKW/nova-releases/releases/latest';
+  const DISCORD = 'https://discord.gg/TTJYqadAh';
+  const BUY = PAY_URL || DISCORD;
+
+  const $ = (s, r = document) => r.querySelector(s);
+  const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const wait = (ms) => new Promise((r) => setTimeout(r, reduce ? Math.min(ms, 60) : ms));
+  const tw = async (tok, ms) => { await wait(ms); if (tok.dead) throw 'stop'; };
+  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+  const lerp = (a, b, t) => a + (b - a) * t;
+  const eio = (t) => (t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2);
+  const eout = (t) => 1 - (1 - t) ** 3;
+
+  // ---------- Son : les bruits de MIRYS, et le « plic » de la goutte (synthétisé) ----------
+  let muted = false, actx = null;
+  const sfx = {};
+  const play = (n, v = 0.35) => { if (muted || !document.body.classList.contains('awake')) return; try { const a = (sfx[n] = sfx[n] || new Audio(`sons/${n}.mp3`)); a.volume = v; a.currentTime = 0; a.play().catch(() => {}); } catch (e) {} };
+  function plic(gain = 0.22, f0 = 1500, f1 = 380) {
+    if (muted) return;
+    try {
+      actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+      const t = actx.currentTime, o = actx.createOscillator(), g = actx.createGain(), o2 = actx.createOscillator(), g2 = actx.createGain();
+      o.type = 'sine'; o.frequency.setValueAtTime(f0, t); o.frequency.exponentialRampToValueAtTime(f1, t + 0.09);
+      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(gain, t + 0.006); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.32);
+      o2.type = 'sine'; o2.frequency.setValueAtTime(f1 * 2.4, t + 0.02); o2.frequency.exponentialRampToValueAtTime(f1 * 1.6, t + 0.2);
+      g2.gain.setValueAtTime(0.0001, t + 0.02); g2.gain.exponentialRampToValueAtTime(gain * 0.25, t + 0.03); g2.gain.exponentialRampToValueAtTime(0.0001, t + 0.6);
+      o.connect(g).connect(actx.destination); o2.connect(g2).connect(actx.destination); o.start(t); o.stop(t + 0.4); o2.start(t); o2.stop(t + 0.7);
+    } catch (e) {}
+  }
+  function hum(on) { // le léger souffle de la lumière qui grandit
+    if (muted) return;
+    try {
+      actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+      const t = actx.currentTime, o = actx.createOscillator(), g = actx.createGain(), f = actx.createBiquadFilter();
+      o.type = 'triangle'; o.frequency.setValueAtTime(110, t); o.frequency.exponentialRampToValueAtTime(220, t + 1.8);
+      f.type = 'lowpass'; f.frequency.value = 900;
+      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.035, t + 1.2); g.gain.exponentialRampToValueAtTime(0.0001, t + 2.2);
+      o.connect(f).connect(g).connect(actx.destination); o.start(t); o.stop(t + 2.3);
+    } catch (e) {}
+  }
+
+  // ---------- Vagues de la voix (reprises de waves.js de MIRYS) ----------
+  class SiriWaves {
+    constructor(canvas) { this.c = canvas; this.ctx = canvas.getContext('2d'); this.state = 'off'; this.level = 0; this.target = 0; this.amp = 0; this.raf = 0; this.f = this.frame.bind(this); this.colors = ['255,255,255', '214,220,232', '190,196,210']; }
+    setLevel(v) { this.target = Math.max(0, Math.min(1, v)); }
+    setState(s) { this.state = s; if (s !== 'off' && !this.raf) this.raf = requestAnimationFrame(this.f); }
+    frame(now) {
+      this.raf = 0; const t = now / 1000; let goal = 0;
+      if (this.state === 'listening') goal = 0.14 + this.level * 0.86; else if (this.state === 'thinking') goal = 0.2 + 0.07 * Math.sin(t * 3.2);
+      this.level += (this.target - this.level) * 0.25; this.amp += (goal - this.amp) * 0.14; this.draw(t);
+      if (this.state !== 'off' || this.amp > 0.01) this.raf = requestAnimationFrame(this.f); else this.ctx.clearRect(0, 0, this.c.width, this.c.height);
+    }
+    draw(t) {
+      const ctx = this.ctx, dpr = Math.min(2, devicePixelRatio || 1);
+      const w = Math.max(1, Math.round(this.c.clientWidth * dpr)), h = Math.max(1, Math.round(this.c.clientHeight * dpr));
+      if (this.c.width !== w || this.c.height !== h) { this.c.width = w; this.c.height = h; }
+      const mid = h / 2, amp = this.amp, step = Math.max(2, Math.round(w / 90)), sp = this.state === 'thinking' ? 1.8 : 1;
+      ctx.clearRect(0, 0, w, h); ctx.save(); ctx.globalCompositeOperation = 'lighter';
+      this.colors.forEach((rgb, i) => {
+        const center = 0.5 + 0.3 * Math.sin(t * (0.55 + i * 0.13) * sp + i * 1.7), spread = 0.2 + 0.07 * Math.sin(t * 0.8 + i * 2.1), freq = 1.6 + i * 0.32, phase = t * (1.5 + i * 0.27) * sp + i * 1.3;
+        const thick = h * 0.4 * amp * (0.65 + 0.35 * Math.sin(t * 1.4 + i * 2.3)), sway = h * 0.14 * amp, top = [], bot = [];
+        for (let x = 0; x <= w + step; x += step) { const nx = Math.min(1, x / w), env = Math.exp(-(((nx - center) / spread) ** 2)), off = Math.sin(nx * freq * Math.PI * 2 + phase) * sway * env, th = thick * env; top.push([x, mid + off - th]); bot.push([x, mid + off + th]); }
+        ctx.filter = `blur(${5 * dpr}px)`; ctx.beginPath(); ctx.moveTo(top[0][0], top[0][1]); for (const [x, y] of top) ctx.lineTo(x, y); for (let k = bot.length - 1; k >= 0; k--) ctx.lineTo(bot[k][0], bot[k][1]); ctx.closePath();
+        ctx.fillStyle = `rgba(${rgb},${0.16 + 0.14 * Math.min(1, amp * 1.5)})`; ctx.fill();
+      });
+      ctx.filter = `blur(${1.2 * dpr}px)`; const g = ctx.createLinearGradient(0, 0, w, 0), core = Math.min(1, 0.45 + amp * 1.2);
+      g.addColorStop(0, 'rgba(255,255,255,0)'); g.addColorStop(0.25, `rgba(255,255,255,${core * 0.8})`); g.addColorStop(0.5, `rgba(255,255,255,${core})`); g.addColorStop(0.75, `rgba(255,255,255,${core * 0.8})`); g.addColorStop(1, 'rgba(255,255,255,0)');
+      ctx.strokeStyle = g; ctx.lineWidth = Math.max(1.2 * dpr, h * 0.035); ctx.beginPath();
+      for (let x = 0; x <= w + step; x += step) { const nx = Math.min(1, x / w), y = mid + Math.sin(nx * 4.2 + t * 2.4 * sp) * h * 0.06 * amp + Math.sin(nx * 9 - t * 1.7) * h * 0.025 * amp; x === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y); }
+      ctx.stroke(); ctx.restore();
+    }
+  }
+
+  // ---------- L'île : un composant, les vraies bulles de MIRYS ----------
+  const ICON = {
+    play: '<svg viewBox="0 0 24 24"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.6-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5z"/></svg>',
+    pause: '<svg viewBox="0 0 24 24"><path d="M7 5h3.5v14H7zM13.5 5H17v14h-3.5z"/></svg>',
+    prev: '<svg viewBox="0 0 24 24"><path d="M6 5h2v14H6zm3.5 7L19 5v14z"/></svg>',
+    next: '<svg viewBox="0 0 24 24"><path d="M16 5h2v14h-2zM5 5l9.5 7L5 19z"/></svg>',
+    mic: '<svg viewBox="0 0 24 24"><path d="M12 14a3 3 0 0 0 3-3V5a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.9V21h2v-3.1a7 7 0 0 0 6-6.9z"/></svg>',
+    head: '<svg viewBox="0 0 24 24"><path d="M12 3a9 9 0 0 0-9 9v6a3 3 0 0 0 3 3h2v-8H5v-1a7 7 0 0 1 14 0v1h-3v8h2a3 3 0 0 0 3-3v-6a9 9 0 0 0-9-9z"/></svg>',
+    hang: '<svg viewBox="0 0 24 24"><path d="M12 9c-1.6 0-3.1.3-4.6.8v3.1c0 .4-.2.7-.6.9-1 .5-1.9 1.1-2.7 1.8-.2.2-.4.3-.7.3s-.5-.1-.7-.3L.3 13.2A1 1 0 0 1 0 12.5c0-.3.1-.5.3-.7C3.3 9 7.4 7.3 12 7.3s8.7 1.7 11.7 4.5c.2.2.3.4.3.7s-.1.5-.3.7l-2.4 2.4c-.2.2-.4.3-.7.3s-.5-.1-.7-.3a11 11 0 0 0-2.7-1.8.9.9 0 0 1-.6-.9V9.8C15.1 9.3 13.6 9 12 9z"/></svg>',
+    send: '<svg viewBox="0 0 24 24"><path d="M12 4l-7 7 1.4 1.4L11 7.8V20h2V7.8l4.6 4.6L19 11z"/></svg>',
+    down: '<svg viewBox="0 0 24 24"><path d="M12 3a1 1 0 0 1 1 1v8.6l2.8-2.8 1.4 1.4L12 16.4l-5.2-5.2 1.4-1.4 2.8 2.8V4a1 1 0 0 1 1-1zM5 18h14v2H5z"/></svg>',
+  };
+  const ISL_HTML = `<div class="clip">
+    <div class="ly ly-pill"><i class="dot"></i><span class="clk">08:00</span></div>
+    <div class="ly ly-notif"><span class="av"></span><div class="nt"><div class="ntop"><span class="nfrom"></span><span class="napp"></span></div><div class="nbody"></div></div></div>
+    <div class="ly ly-info"><span class="itx"></span></div>
+    <div class="ly ly-voice"><canvas></canvas></div>
+    <div class="ly ly-music"><span class="cover"></span><div class="mt"><b class="mtt">Polaris</b><span class="mta">Ana Volt</span><div class="prog"><i></i></div></div><div class="ctl"><i>${ICON.prev}</i><i class="pp">${ICON.pause}</i><i>${ICON.next}</i></div></div>
+    <div class="ly ly-compose"><div class="hint">Écrivez votre réponse, ou maintenez la touche pour la dicter.</div><span class="rchip"><span>En réponse à</span><span class="av">M</span><b>Maman</b><em>×</em></span><div class="bar"><span class="tx" data-ph="Répondre à Maman…"></span><span class="mic">${ICON.mic}</span><span class="send">${ICON.send}</span></div></div>
+    <div class="ly ly-callin"><span class="av indigo">L</span><div class="nt"><div class="ntop"><span class="nfrom">Léo</span><span class="napp acc">Appel · Discord</span></div><div class="nbody">Appel Discord</div><div class="acts"><span class="g">Accepter</span><span class="r">Refuser</span><span>Masquer</span></div></div></div>
+    <div class="ly ly-call"><span class="cav">L</span><div class="nt"><span class="nfrom">Léo</span><span class="ctime"><i></i>Discord · <b class="ct">0:00</b></span></div><div class="cbtn"><i>${ICON.mic}</i><i>${ICON.head}</i><i class="hang">${ICON.hang}</i></div></div>
+    <div class="ly ly-drop">${ICON.down}<span>Déposez, je m’en occupe</span></div>
+    <div class="ly ly-file"><div class="fchip"><u>PDF</u>Bilan comptable 2026.pdf</div><div class="q">Que dois-je faire de ce fichier ?</div><div class="bar"><span class="tx" data-ph="Ou dites-moi : « fusionne-les », « compresse »…"></span><span class="send">${ICON.send}</span></div></div>
+    <div class="ly ly-ask"><span class="av" style="background:linear-gradient(135deg,#7b83eb,#4b53bc)">T</span><div class="nt"><div class="nbody" style="-webkit-line-clamp:2">Puis-je vous connecter à Teams ? Choisissez le compte :</div><div class="acts pick"><span data-acc="Perso">Perso</span><span data-acc="Pro">Pro</span></div></div></div>
+    <div class="ly ly-code"><span class="av nuvio">N</span><div class="nt"><div class="ntop"><span class="nfrom">Nuvio</span><span class="napp">Code de vérification</span></div><div class="code">482 913</div><div class="acts pick"><span class="w cpy">Copier</span><span>Ouvrir le mail</span></div></div></div>
+    <div class="ly ly-match"><span class="av" style="background:linear-gradient(135deg,#c8aa6e,#7a5c29)">⚔</span><div class="nt"><div class="ntop"><span class="nfrom">Partie trouvée</span><span class="napp">League of Legends</span></div><div class="nbody">Faille de l’invocateur · Classée Solo/Duo</div><div class="acts"><span class="g">Accepter</span><span class="r">Refuser</span></div></div></div>
+    <span class="rond-art" style="--art:url(img/c2.webp)"></span>
+  </div><div class="edge"></div>`;
+
+  class Island {
+    constructor(el) {
+      this.el = el; if (!el.firstChild) el.innerHTML = ISL_HTML;
+      this.waves = el.querySelector('.ly-voice canvas') ? new SiriWaves(el.querySelector('.ly-voice canvas')) : null;
+      this.callT = 0;
+      el.addEventListener('pointermove', (e) => { const r = el.getBoundingClientRect(); el.querySelector('.edge').style.setProperty('--hx', `${((e.clientX - r.left) / r.width) * 100}%`); el.querySelector('.edge').style.setProperty('--hy', `${((e.clientY - r.top) / r.height) * 100}%`); el.classList.add('lit'); });
+      el.addEventListener('pointerleave', () => { const ed = el.querySelector('.edge'); ed.style.removeProperty('--hx'); ed.style.removeProperty('--hy'); el.classList.remove('lit'); });
+    }
+    set(s) { this.el.dataset.s = s; if (this.waves) this.waves.setState(s === 'voice' ? (this.el.classList.contains('thinking') ? 'thinking' : 'listening') : 'off'); if (s !== 'call') clearInterval(this.callT); return this; }
+    clock(t) { const c = this.el.querySelector('.clk'); if (c) c.textContent = t; return this; }
+    notif({ av = 'M', cls = '', from, app, body }) { const n = this.el.querySelector('.ly-notif'); const a = n.querySelector('.av'); a.className = 'av ' + cls; a.textContent = av; n.querySelector('.nfrom').textContent = from; n.querySelector('.napp').textContent = app; n.querySelector('.nbody').textContent = body; return this.set('notif'); }
+    info(text) {
+      const t = this.el.querySelector('.itx'); t.textContent = text;
+      const m = document.createElement('span'); m.style.cssText = 'position:absolute;visibility:hidden;white-space:nowrap;font:600 13.5px var(--ui)'; m.textContent = text; document.body.appendChild(m);
+      const w = Math.min(560, Math.max(170, Math.ceil(m.getBoundingClientRect().width) + 54)); m.remove();
+      this.el.style.setProperty('--bw', w + 'px'); return this.set('info');
+    }
+    music(on) { const ly = this.el.querySelector('.ly-music'); ly.style.setProperty('--art', 'url(img/c2.webp)'); ly.querySelector('.cover').style.setProperty('--art', 'url(img/c2.webp)'); ly.querySelector('.pp').innerHTML = on ? ICON.pause : ICON.play; return this.set('music'); }
+    call() { let s = 0; const ct = this.el.querySelector('.ct'); ct.textContent = '0:00'; this.set('call'); this.callT = setInterval(() => { s++; ct.textContent = `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`; }, 1000); return this; }
+  }
+
+  // Typage lettre par lettre
+  async function type(el, text, cps, tok) {
+    el.textContent = ''; const caret = document.createElement('span'); caret.className = 'caret';
+    for (let i = 1; i <= text.length; i++) { if (tok && tok.dead) return; el.textContent = text.slice(0, i); el.appendChild(caret); await wait(1000 / cps); }
+    caret.remove();
+  }
+  const press = async (el) => { el.classList.add('press'); await wait(180); el.classList.remove('press'); };
+
+  // Mise à l'échelle : l'île garde ses vraies proportions par rapport à l'écran qui l'accueille
+  function fitScreen(scr, base, min = 0.5, max = 2) {
+    const ro = new ResizeObserver(() => { const k = Math.max(min, Math.min(max, scr.clientWidth / base)); scr.style.setProperty('--k', k.toFixed(3)); });
+    ro.observe(scr);
+  }
+
+  // Lance une scène quand l'élément est visible, l'arrête quand il sort
+  function whenSeen(el, fn, threshold = 0.35) {
+    const io = new IntersectionObserver((es) => es.forEach((e) => fn(e.isIntersecting)), { threshold });
+    io.observe(el);
+  }
+
+
+
+  // =====================================================================
+  // Les présentations
+  // =====================================================================
+  const I = {
+    down: '<svg viewBox="0 0 24 24"><path d="M12 3a1 1 0 0 1 1 1v9.6l3.3-3.3 1.4 1.4L12 17.4l-5.7-5.7 1.4-1.4 3.3 3.3V4a1 1 0 0 1 1-1zM5 19h14v2H5z"/></svg>',
+    chat: '<svg viewBox="0 0 24 24"><path d="M20 2H4a2 2 0 0 0-2 2v18l4-4h14a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2z"/></svg>',
+    play: '<svg viewBox="0 0 24 24"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.6-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5z"/></svg>',
+    euro: '<svg viewBox="0 0 24 24"><path d="M15 18.5A6.5 6.5 0 0 1 9.2 15H15l1-2H8.6a6.7 6.7 0 0 1 0-2H16l1-2H9.2A6.5 6.5 0 0 1 15 5.5c1.6 0 3.1.6 4.2 1.6L21 5.3A9 9 0 0 0 6.5 9H3l-1 2h4.1a9 9 0 0 0 0 2H3l-1 2h4.5A9 9 0 0 0 21 18.7l-1.8-1.8a6.5 6.5 0 0 1-4.2 1.6z"/></svg>',
+  };
+  const CH = [
+    { id: 'bonjour', label: 'Bonjour', when: 'MIRYS', title: 'Votre assistante, en haut de l’écran.', text: 'MIRYS vit au-dessus de vos fenêtres, sous Windows. Faites défiler : chaque goutte vous montre une chose qu’elle fait, avec sa vraie interface.', demo: 'hello' },
+    { id: 'voix', label: 'Parlez-lui', when: '09:12', title: 'Parlez-lui.', text: 'Maintenez une touche et dites ce dont vous avez besoin. Un rappel, une tâche, une question : c’est noté, sans ouvrir aucune fenêtre.', demo: 'voice' },
+    { id: 'mail', label: 'Mails', when: '10:31', title: 'Elle écrit pour vous.', text: 'Le mail important arrive sur l’île. Dites en une phrase quoi répondre : MIRYS rédige dans le bon ton. Rien ne part sans votre clic sur Envoyer.', demo: 'mail' },
+    { id: 'messages', label: 'Messages', when: '12:41', title: 'Sans changer d’appli.', text: 'SMS, WhatsApp, Discord : les messages arrivent en haut de l’écran. Répondez au clavier ou à la voix, et gardez votre fenêtre devant vous.', demo: 'sms' },
+    { id: 'musique', label: 'Musique', when: '14:20', title: 'Votre musique, d’un geste.', text: 'Le morceau en cours se range dans un petit rond à côté de l’île. Un clic : la pochette, la pause, le suivant.', demo: 'music' },
+    { id: 'appels', label: 'Appels', when: '15:52', title: 'Vos appels, sur l’île.', text: 'Un ami appelle sur Discord ? Décrochez sans quitter votre partie. Le micro, la sourdine et le temps d’appel restent sous vos yeux.', demo: 'call' },
+    { id: 'jeu', label: 'En jeu', when: '16:03', title: 'En jeu, elle se fait discrète.', text: 'MIRYS reconnaît votre jeu et devient un petit rond. « Mirys, clip ! » garde les 30 dernières secondes. Le Live suit League of Legends et Valorant.', demo: 'game' },
+    { id: 'outils', label: 'Le reste', when: '11:12', title: 'Et tout le reste.', text: 'Le code reçu par mail, copié en un clic. Vos identifiants remplis à la connexion. Un fichier glissé sur l’île, converti ou envoyé. Essayez : cliquez sur Copier.', demo: 'tools' },
+    { id: 'formes', label: 'Formes', when: '18:32', title: 'Elle prend la place qu’il faut.', text: 'Gardez l’île, réduisez-la à un petit rond pendant vos parties, ou à une simple goutte. Vos bulles arrivent toujours.', demo: 'forms' },
+    { id: 'confiance', label: 'Confiance', plain: 'trust', title: 'Tout reste chez vous.', text: 'MIRYS travaille sur votre PC. Elle n’envoie rien sans votre « oui ».' },
+    { id: 'pub', label: 'La pub', plain: 'video', title: 'MIRYS en une minute.', text: '' },
+    { id: 'tarif', label: 'Tarif', plain: 'price', title: 'Toutes les fonctions. Un seul prix.', text: '' },
+  ];
+
+  const words = (t, base = 0, step = 55) => t.split(' ').map((w, i) => `<span class="w rv" style="--d:${base + i * step}ms;--o:${i * 25}ms">${w}</span>`).join(' ');
+  const rv = (html, d, o = 0, tag = 'div', cls = '') => `<${tag} class="rv ${cls}" style="--d:${d}ms;--o:${o}ms">${html}</${tag}>`;
+
+  function paneHTML(c) {
+    if (c.plain === 'trust') return `<div class="plain"><h2>${words(c.title, 250)}</h2>${rv(c.text, 600, 40, 'p', 'lede')}<div class="tiles">${[['L’IA tourne sur votre PC', 'Sans compte chez un fournisseur, sans clé payante. Pause ou arrêt en un clic.'], ['Rien ne part sans vous', 'Aucun message, aucun mail ne part sans votre « envoie ».'], ['Mots de passe chiffrés', 'Chiffrés par Windows et jamais donnés à l’IA.'], ['Votre voix reste ici', 'Reconnaissance vocale et clips restent sur votre PC. Pour la météo, seule la ville est envoyée.']].map(([a, b], i) => rv(`<b>${a}</b><span>${b}</span>`, 800 + i * 110, 60 + i * 30)).join('')}</div></div>`;
+    if (c.plain === 'video') return `<div class="plain"><h2>${words(c.title, 250)}</h2>${rv(`<div class="vid"><video src="img/mirys-1min.mp4" poster="img/poster.jpg" preload="none" playsinline></video><button type="button" aria-label="Lire la vidéo"><span>${I.play}Regarder · 0:59</span></button></div>`, 700, 50, 'div', 'vidwrap')}</div>`;
+    if (c.plain === 'price') return `<div class="plain">${rv('<span class="wordmark">MIRYS</span>', 200, 0)}<h2 style="font-size:clamp(22px,2.2vw,30px)">${words(c.title, 450, 45)}</h2>
+      ${rv('<div class="price"><b>4,99 €</b><span>par mois</span></div>', 750, 40)}
+      ${rv('<ul class="ticks"><li>Toutes les fonctionnalités</li><li>Mises à jour automatiques</li><li>Un PC à la fois</li><li>Sans engagement</li></ul>', 950, 60)}
+      ${rv(`<div class="ctas"><a class="pill white" href="${DL}" target="_blank" rel="noopener">${I.down}Télécharger MIRYS 1.1.0</a><a class="pill" href="${BUY}" target="_blank" rel="noopener">${I.euro}Prendre ma licence</a><a class="pill" href="${DISCORD}" target="_blank" rel="noopener">${I.chat}Bêta gratuite sur Discord</a></div>`, 1150, 80)}
+      ${rv('Windows 10 ou 11, 64 bits · ≈ 160 Mo · IA locale facultative (≈ 5 Go) · Paiement sécurisé par Lemon Squeezy, clé par e-mail.<br>Et ce n’est qu’un début : de nouvelles fonctionnalités arrivent en continu, guidées par vos idées.', 1350, 100, 'p', 'fine')}</div>`;
+    const extra = { hello: BCARD, mail: MWIN, forms: DROP }[c.demo] || '';
+    const seg = c.demo === 'forms' ? rv('<div class="seg"><i class="seg-glow"></i><button type="button" data-f="ile">L’île</button><button type="button" data-f="rond">Le petit rond</button><button type="button" data-f="goutte">La goutte</button></div>', 900, 60, 'div', 'acts2') : '';
+    return `<div class="screen"><div class="wall"></div><div class="walls"></div><div class="game"><b>EN PARTIE</b></div>${extra}<div class="isl" data-s="hidden"></div><div class="orb" style="--art:url(img/c2.webp)"><b></b></div><div class="said"><span class="who"></span><span class="saidtx"></span></div></div>
+      <div class="copy">${rv(`<i></i>${c.when}`, 300, 0, 'span', 'when')}<h2>${words(c.title, 420)}</h2>${rv(c.text, 760, 60, 'p')}${seg}</div>`;
+  }
+
+  // ---------- Démos : les vraies bulles de MIRYS ----------
+  const BCARD = `<div class="bcard"><div class="rim"></div><div class="layer greet"><div class="g-small">Bonjour</div><div class="g-name">Camille</div></div><div class="layer binfo"><div class="weather"><div class="w-ico"><svg viewBox="0 0 64 64"><g fill="none" stroke="#ffd56b" stroke-width="4" stroke-linecap="round"><circle cx="32" cy="32" r="11" fill="#ffd56b"/><path d="M32 6v7M32 51v7M6 32h7M51 32h7M13.6 13.6l5 5M45.4 45.4l5 5M13.6 50.4l5-5M45.4 18.6l5-5"/></g></svg></div><div class="w-temp">14°</div><div class="w-text">La météo prévoit une journée ensoleillée.</div></div><div class="chips"><span class="chip"><i></i>3 tâches aujourd’hui</span><span class="chip mail"><i></i>1 mail important</span></div></div></div>`;
+  const MWIN = `<div class="mwin"><h4>Réponse à Marc Dubois</h4><div class="field"><label>À</label><span class="rchip"><span class="av blue">M</span><b>Marc Dubois</b></span></div><div class="field"><label>Objet</label>Re: Bilan comptable</div><div class="mbody"></div><div class="askbar"><i></i><span class="tx"></span><u>Rédiger</u></div></div>`;
+  const DROP = `<div class="drop"><svg viewBox="0 -2 100 28" aria-hidden="true"><defs><linearGradient id="dFill" x1="0" y1="0" x2="0" y2="24" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#050507"/><stop offset="0.3" stop-color="#050507" stop-opacity="0.96"/><stop offset="1" stop-color="#050507" stop-opacity="0.68"/></linearGradient><radialGradient id="dHi" cx="70" cy="8" r="24" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#fff" stop-opacity="0.55"/><stop offset="0.45" stop-color="#fff" stop-opacity="0.2"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient><radialGradient id="dLo" cx="36" cy="21" r="16" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#fff" stop-opacity="0.26"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient><linearGradient id="dFade" x1="0" y1="0" x2="0" y2="5" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#fff"/></linearGradient><mask id="dMask" maskUnits="userSpaceOnUse" x="-10" y="-2" width="120" height="40"><rect x="-10" y="-2" width="120" height="40" fill="url(#dFade)"/></mask></defs><path d="M0 -2H100V0H81A12 12 0 0 0 69.375 9A20 20 0 0 1 30.625 9A12 12 0 0 0 19 0H0Z" fill="url(#dFill)"/><g mask="url(#dMask)"><path d="M100 0H81A12 12 0 0 0 69.375 9A20 20 0 0 1 30.625 9A12 12 0 0 0 19 0H0" fill="none" stroke="rgba(140,140,150,0.2)" stroke-width="0.6"/><path d="M100 0H81A12 12 0 0 0 69.375 9A20 20 0 0 1 30.625 9A12 12 0 0 0 19 0H0" fill="none" stroke="url(#dHi)" stroke-width="0.6"/><path d="M100 0H81A12 12 0 0 0 69.375 9A20 20 0 0 1 30.625 9A12 12 0 0 0 19 0H0" fill="none" stroke="url(#dLo)" stroke-width="0.6"/></g></svg></div>`;
+  const WALLS = ['linear-gradient(135deg,#0f3d3e,#1c7c6b 55%,#9be3c4)', 'radial-gradient(80% 80% at 70% 30%,#ffb199,transparent 60%),linear-gradient(160deg,#4b1d52,#c0392b 70%,#f39c12)', 'radial-gradient(60% 70% at 20% 80%,#00d2ff,transparent 60%),linear-gradient(200deg,#0b0f2b,#233a8f 60%,#3a7bd5)', 'linear-gradient(170deg,#f6d365,#fda085 60%,#e8608a)', 'radial-gradient(70% 70% at 80% 80%,#a1ffce,transparent 60%),linear-gradient(140deg,#1e3c72,#2a5298 50%,#5ad1b8)', 'linear-gradient(150deg,#232526,#414345 50%,#8e9eab)', 'radial-gradient(70% 70% at 30% 30%,#ff6ec4,transparent 60%),linear-gradient(200deg,#2b1055,#7597de)', 'linear-gradient(160deg,#134e5e,#71b280)', 'radial-gradient(70% 60% at 60% 40%,#ffe29f,transparent 60%),linear-gradient(170deg,#ff7e5f,#6a3093)', 'linear-gradient(140deg,#000428,#004e92)', 'radial-gradient(60% 60% at 70% 70%,#f093fb,transparent 60%),linear-gradient(160deg,#4facfe,#1a2a6c)', 'linear-gradient(150deg,#3e5151,#decba4)'];
+  const NAMES = [['Lucas', 0], ['Inès', 1], ['Hugo', 2], ['Sarah', 3], ['Yanis', 4], ['Léa', 5], ['Nathan', 6], ['Emma', 7], ['Karim', 8], ['Chloé', 9], ['Mehdi', 10], ['Jade', 11], ['Tom', 2], ['Zoé', 8]];
+  const GAPS = [0.62, 0.52, 0.44, 0.38, 0.32, 0.27, 0.23, 0.2, 0.17, 0.15, 0.13, 0.12, 0.1, 0.1];
+
+  const DEMOS = {
+    async hello(S, isl, tok) {
+      const walls = $('.walls', S); walls.innerHTML = WALLS.map((w) => `<i style="background:${w}"></i>`).join('');
+      const setWall = (i) => $$('i', walls).forEach((x, k) => x.classList.toggle('on', k === i));
+      const c = $('.bcard', S), g = $('.greet', S), name = $('.g-name', S);
+      c.style.width = '300px'; c.style.height = '140px'; g.classList.add('show'); await tw(tok, 40); c.classList.add('on'); await tw(tok, 1200);
+      for (let i = 0; i < NAMES.length; i++) { setWall(NAMES[i][1]); name.textContent = NAMES[i][0]; await tw(tok, GAPS[i] * 1000); }
+      setWall(-1); name.textContent = 'Camille'; await tw(tok, 1500);
+      g.classList.remove('show'); c.style.width = '470px'; c.style.height = '160px'; $('.binfo', S).classList.add('show'); await tw(tok, 3400);
+      c.classList.add('land'); await tw(tok, 650); isl.clock('08:00').set('pill'); c.classList.add('gone');
+      for (;;) {
+        await tw(tok, 1800); isl.notif({ av: 'M', from: 'Maman', app: 'Message', body: 'Pense à appeler le dentiste pour ton rendez-vous !' }); play('sent', 0.2);
+        await tw(tok, 3200); isl.info('Réponse envoyée à Maman.'); await tw(tok, 2400); isl.set('pill');
+        await tw(tok, 2200); isl.info('Léo vient de se connecter sur Discord.'); play('reminder', 0.2); await tw(tok, 3000); isl.set('pill');
+      }
+    },
+    async voice(S, isl, tok) {
+      const said = $('.said', S), tx = $('.saidtx', S);
+      for (;;) {
+        isl.clock('09:12').set('pill'); tx.textContent = ''; await tw(tok, 900); isl.set('voice'); play('listen', 0.3); said.classList.add('on');
+        const lv = setInterval(() => isl.waves && isl.waves.setLevel(0.25 + Math.random() * 0.6), 120);
+        try { await type(tx, 'Rappelle-moi d’appeler le dentiste à 17 h.', 17, tok); await tw(tok, 0); } finally { clearInterval(lv); }
+        isl.waves.setLevel(0); isl.el.classList.add('thinking'); isl.waves.setState('thinking'); play('work', 0.25); await tw(tok, 1300);
+        isl.el.classList.remove('thinking'); said.classList.remove('on'); isl.info('C’est noté, je vous le rappellerai à 17 h.'); play('success', 0.25);
+        await tw(tok, 4200);
+      }
+    },
+    async mail(S, isl, tok) {
+      const mw = $('.mwin', S);
+      for (;;) {
+        $('.mbody', mw).textContent = ''; $('.askbar .tx', mw).textContent = ''; mw.classList.remove('on');
+        isl.clock('10:31').set('pill'); await tw(tok, 700); isl.notif({ av: 'M', cls: 'blue', from: 'Marc Dubois', app: 'Mail', body: 'Bilan comptable' }); play('sent', 0.25);
+        await tw(tok, 2400); isl.set('pill'); mw.classList.add('on'); await tw(tok, 800);
+        await type($('.askbar .tx', mw), 'Dis-lui que je m’en occupe', 15, tok); await tw(tok, 0); await press($('.askbar u', mw)); isl.el.classList.add('thinking'); await tw(tok, 900);
+        await type($('.mbody', mw), 'Bonjour Marc,\n\nJe m’en occupe, je te l’envoie dans la matinée.\n\nBonne journée,\nCamille', 46, tok); await tw(tok, 0); isl.el.classList.remove('thinking');
+        await tw(tok, 4500);
+      }
+    },
+    async sms(S, isl, tok) {
+      for (;;) {
+        isl.clock('12:41').set('pill'); await tw(tok, 700); isl.notif({ av: 'M', from: 'Maman', app: 'Message', body: 'Pense à appeler le dentiste pour ton rendez-vous !' }); play('sent', 0.25);
+        await tw(tok, 2500); const tx = $('.ly-compose .tx', isl.el); tx.textContent = ''; isl.set('compose'); await tw(tok, 800);
+        await type(tx, 'Oui, je m’en occupe cet après-midi !', 19, tok); await tw(tok, 0); await press($('.ly-compose .send', isl.el)); play('sent', 0.3); isl.info('Réponse envoyée à Maman.');
+        await tw(tok, 2800); isl.set('pill'); await tw(tok, 1000); isl.info('Léo vient de se connecter sur Discord.'); play('reminder', 0.25); await tw(tok, 3200);
+      }
+    },
+    async music(S, isl, tok) {
+      const orb = $('.orb', S);
+      for (;;) {
+        const ly = $('.ly-music', isl.el); $('.mtt', isl.el).textContent = 'Polaris'; $('.mta', isl.el).textContent = 'Ana Volt'; orb.style.setProperty('--art', 'url(img/c2.webp)');
+        isl.clock('14:20').set('pill'); await tw(tok, 700); orb.classList.add('show', 'playing'); await tw(tok, 2000);
+        orb.classList.remove('show'); isl.music(true); await tw(tok, 3200); await press($$('.ctl i', isl.el)[2]);
+        $('.mtt', isl.el).textContent = 'Néons sur la Saône'; $('.mta', isl.el).textContent = 'Lumen Club'; ly.style.setProperty('--art', 'url(img/c3.webp)'); $('.cover', ly).style.setProperty('--art', 'url(img/c3.webp)');
+        await tw(tok, 3000); isl.set('pill'); orb.style.setProperty('--art', 'url(img/c3.webp)'); orb.classList.add('show'); await tw(tok, 3000); orb.classList.remove('show', 'playing'); await tw(tok, 600);
+      }
+    },
+    async call(S, isl, tok) {
+      for (;;) { isl.clock('15:52').set('pill'); await tw(tok, 800); isl.set('callin'); play('call', 0.25); await tw(tok, 2600); await press($('.ly-callin .g', isl.el)); isl.call(); await tw(tok, 7000); isl.set('pill'); await tw(tok, 900); isl.info('Appel terminé.'); await tw(tok, 2000); }
+    },
+    async game(S, isl, tok) {
+      const g = $('.game', S), said = $('.said', S), tx = $('.saidtx', S); g.classList.add('on');
+      for (;;) {
+        tx.textContent = ''; isl.clock('16:03').set('pill'); await tw(tok, 800); isl.info('League of Legends détecté : mode gaming activé. Bonne partie.'); await tw(tok, 3000);
+        isl.set('rond'); await tw(tok, 1600); isl.set('voice'); said.classList.add('on'); await type(tx, 'Mirys, clip !', 13, tok); await tw(tok, 0); said.classList.remove('on');
+        isl.info('Clip de 30 s enregistré.'); play('success', 0.25); await tw(tok, 2400); isl.set('match'); play('call', 0.18); await tw(tok, 2600); await press($('.ly-match .g', isl.el)); isl.info('Partie acceptée. Bon jeu !'); await tw(tok, 2200); isl.set('rond'); await tw(tok, 2000);
+      }
+    },
+    async tools(S, isl, tok) {
+      for (;;) {
+        isl.clock('11:12').set('pill'); await tw(tok, 600); isl.set('code'); play('sent', 0.2); await tw(tok, 4500);
+        isl.set('pill'); await tw(tok, 700); isl.set('ask'); await tw(tok, 4500);
+        isl.set('drop'); await tw(tok, 1500); isl.set('file'); play('listen', 0.2); await tw(tok, 4000); isl.set('pill'); await tw(tok, 800);
+      }
+    },
+    async forms(S, isl, tok, pane) {
+      const drop = $('.drop', S); isl.clock('18:32');
+      const btns = $$('.seg button', pane), glow = $('.seg-glow', pane);
+      const set = (f) => { btns.forEach((b) => b.setAttribute('aria-selected', b.dataset.f === f)); const b = btns.find((x) => x.dataset.f === f); glow.style.width = b.offsetWidth + 'px'; glow.style.transform = `translateX(${b.offsetLeft - 3}px)`;
+        if (f === 'ile') { drop.classList.remove('show'); isl.set('pill'); } if (f === 'rond') { drop.classList.remove('show'); isl.set('rond'); } if (f === 'goutte') { isl.set('hidden'); drop.classList.add('show'); } };
+      btns.forEach((b) => (b.onclick = () => { tok.dead = true; set(b.dataset.f); }));
+      set('ile'); for (let i = 1; ; i++) { await tw(tok, 2800); set(['ile', 'rond', 'goutte'][i % 3]); }
+    },
+  };
+
+  // =====================================================================
+  // Les verres
+  // =====================================================================
+  const panesEl = $('#panes');
+  let W = innerWidth, H = innerHeight, PW = 0, PH = 0, PTOP = 0, SP = 0;
+  function layout() {
+    W = innerWidth; H = innerHeight;
+    const mob = W <= 760;
+    PW = Math.round(mob ? W - 24 : Math.min(W * 0.84, 1360));
+    PH = Math.round(mob ? H * 0.74 : Math.min(H * 0.76, PW * 0.62));
+    PTOP = Math.round(mob ? H * 0.16 : Math.max(76, (H - PH) * 0.56));
+    SP = Math.round(H * 1.7);
+    document.documentElement.style.setProperty('--pw', PW + 'px');
+    document.documentElement.style.setProperty('--ph', PH + 'px');
+  }
+  layout();
+
+  const panes = new Map(); // index -> { el, tok }
+  function makePane(i) {
+    const c = CH[i];
+    const el = document.createElement('section'); el.className = 'pane'; el.dataset.i = i; el.setAttribute('aria-label', c.title);
+    el.innerHTML = `<div class="glass">${paneHTML(c)}</div><i class="sheen"></i><i class="ring"></i><i class="dim"></i>`;
+    panesEl.appendChild(el);
+    const v = $('.vid button', el); if (v) v.addEventListener('click', () => { const vid = $('video', el); vid.controls = true; v.hidden = true; vid.play().catch(() => {}); });
+    const p = { el, tok: { dead: true }, i };
+    panes.set(i, p); return p;
+  }
+  const getPane = (i) => panes.get(i) || makePane(i);
+  function startDemo(p) {
+    const c = CH[p.i]; if (!c.demo) return;
+    p.tok.dead = true; const tok = (p.tok = { dead: false });
+    const S = $('.screen', p.el); const isl = p.isl || (p.isl = new Island($('.isl', S)));
+    if (!p.fit) { p.fit = true; fitScreen(S, W <= 760 ? 560 : 860, 0.6, 1.55); }
+    if (c.demo === 'tools' && !p.wired) {
+      p.wired = true;
+      $('.cpy', isl.el).addEventListener('click', async (e) => { const b = e.currentTarget; try { await navigator.clipboard.writeText('482913'); } catch (err) {} b.textContent = 'Copié'; play('success', 0.3); setTimeout(() => (b.textContent = 'Copier'), 1500); });
+      $$('[data-acc]', isl.el).forEach((s) => s.addEventListener('click', async () => { p.tok.dead = true; await press(s); isl.info(`C’est fait : identifiants de ${s.dataset.acc} saisis.`); play('success', 0.3); }));
+    }
+    DEMOS[c.demo](S, isl, tok, p.el).catch(() => {});
+  }
+  function stopDemo(p) { if (p) p.tok.dead = true; }
+  function resetPane(p) { // remet la scène à zéro (avant d'y revenir)
+    stopDemo(p); const S = $('.screen', p.el); if (!S) return;
+    $$('.bcard', S).forEach((b) => { b.className = 'bcard'; $$('.layer', b).forEach((l) => l.classList.remove('show')); });
+    $$('.mwin, .said, .game, .orb, .drop', S).forEach((n) => n.classList.remove('on', 'show', 'playing'));
+    if (p.isl) p.isl.set('hidden');
+  }
+
+  // =====================================================================
+  // La lumière : voyant, goutte, éclaboussures, contour
+  // =====================================================================
+  const cv = $('#fx'), ctx = cv.getContext('2d');
+  let dpr = Math.min(2, devicePixelRatio || 1);
+  function size() { dpr = Math.min(2, devicePixelRatio || 1); cv.width = Math.round(innerWidth * dpr); cv.height = Math.round(innerHeight * dpr); }
+  size();
+  const LED = () => ({ x: W / 2, y: Math.round(H * 0.4) });
+  document.documentElement.style.setProperty('--ledy', LED().y + 'px');
+
+  // Monde : le voyant est au-dessus du verre n°0 ; la caméra descend de verre en verre
+  let camY = -SP; // vue du voyant
+  const paneTop = (i) => i * SP + PTOP;
+  function place(p) { p.el.style.transform = `translate3d(0, ${paneTop(p.i) - camY}px, 0)`; }
+
+  // Poussière : quelques grains presque invisibles qui défilent quand on suit la goutte
+  const dust = Array.from({ length: 70 }, () => ({ x: Math.random(), y: Math.random() * 30 - 2, r: Math.random() * 1.1 + 0.3, a: Math.random() * 0.08 + 0.02, z: Math.random() * 0.6 + 0.4 }));
+
+  // Contour d'un rectangle arrondi, paramétré par la longueur (0 = milieu du haut, sens horaire)
+  function perim(x, y, w, h, r) {
+    const segs = [], add = (len, fn) => segs.push({ len, fn });
+    add(w / 2 - r, (t) => [x + w / 2 + t, y]);
+    add((Math.PI * r) / 2, (t) => { const a = -Math.PI / 2 + t / r; return [x + w - r + Math.cos(a) * r, y + r + Math.sin(a) * r]; });
+    add(h - 2 * r, (t) => [x + w, y + r + t]);
+    add((Math.PI * r) / 2, (t) => { const a = t / r; return [x + w - r + Math.cos(a) * r, y + h - r + Math.sin(a) * r]; });
+    add(w - 2 * r, (t) => [x + w - r - t, y + h]);
+    add((Math.PI * r) / 2, (t) => { const a = Math.PI / 2 + t / r; return [x + r + Math.cos(a) * r, y + h - r + Math.sin(a) * r]; });
+    add(h - 2 * r, (t) => [x, y + h - r - t]);
+    add((Math.PI * r) / 2, (t) => { const a = Math.PI + t / r; return [x + r + Math.cos(a) * r, y + r + Math.sin(a) * r]; });
+    add(w / 2 - r, (t) => [x + r + t, y]);
+    const P = segs.reduce((s, g) => s + g.len, 0);
+    const at = (s) => { s = ((s % P) + P) % P; for (const g of segs) { if (s <= g.len) return g.fn(s); s -= g.len; } return [x + w / 2, y]; };
+    return { P, at };
+  }
+  function rimPath(pm, s0, s1) {
+    ctx.beginPath(); const n = Math.max(2, Math.ceil(Math.abs(s1 - s0) / 5));
+    for (let k = 0; k <= n; k++) { const [px, py] = pm.at(lerp(s0, s1, k / n)); k ? ctx.lineTo(px * dpr, py * dpr) : ctx.moveTo(px * dpr, py * dpr); }
+  }
+  function drawRim(pm, ranges, alpha) {
+    ctx.save(); ctx.lineCap = 'round'; ctx.globalCompositeOperation = 'lighter';
+    for (const [a, b] of ranges) {
+      if (b - a < 0.5) continue;
+      rimPath(pm, a, b);
+      ctx.filter = `blur(${4 * dpr}px)`; ctx.strokeStyle = `rgba(255,255,255,${0.16 * alpha})`; ctx.lineWidth = 6 * dpr; ctx.stroke();
+      ctx.filter = 'none'; ctx.strokeStyle = `rgba(255,255,255,${0.42 * alpha})`; ctx.lineWidth = 1.3 * dpr; ctx.stroke();
+    }
+    ctx.restore();
+  }
+  function glow(x, y, r, a, col = '255,255,255') {
+    const g = ctx.createRadialGradient(x * dpr, y * dpr, 0, x * dpr, y * dpr, r * dpr);
+    g.addColorStop(0, `rgba(${col},${a})`); g.addColorStop(0.25, `rgba(${col},${a * 0.45})`); g.addColorStop(1, `rgba(${col},0)`);
+    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x * dpr, y * dpr, r * dpr, 0, Math.PI * 2); ctx.fill();
+  }
+  function head(x, y, a = 1) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; glow(x, y, 90, 0.5 * a); glow(x, y, 18, 0.9 * a); ctx.restore(); }
+  // ---------- La goutte : une seule forme blanche, dessinée hors écran puis floutée en plusieurs couches ----------
+  // Tout ce qui appartient à la goutte (la lumière du bord qui se rassemble, le col, la perle) est dessiné dans la même
+  // image avant d'être flouté : aucune superposition visible.
+  const off = document.createElement('canvas'), octx = off.getContext('2d');
+  // Flou compatible téléphones : Safari (iPhone) ignore ctx.filter ; on passe alors par une ombre floutée, décalée hors champ
+  const FILTER_OK = (() => { try { const t = document.createElement('canvas'); t.width = t.height = 9; const c = t.getContext('2d'); c.filter = 'blur(2px)'; c.fillStyle = '#fff'; c.fillRect(4, 4, 1, 1); return c.getImageData(1, 4, 1, 1).data[3] > 0; } catch (e) { return false; } })();
+  const OFFS = 60000;
+  function blurImg(img, dx, dy, b) {
+    if (FILTER_OK) { ctx.filter = `blur(${b}px)`; ctx.drawImage(img, dx, dy); ctx.filter = 'none'; return; }
+    ctx.save(); ctx.shadowColor = '#fff'; ctx.shadowBlur = b * 2; ctx.shadowOffsetX = OFFS; ctx.drawImage(img, dx - OFFS, dy); ctx.restore();
+  }
+  function blurStroke(path, b) {
+    if (FILTER_OK || b < 0.8) { ctx.filter = b >= 0.8 ? `blur(${b}px)` : 'none'; ctx.stroke(path); ctx.filter = 'none'; return; }
+    ctx.save(); ctx.shadowColor = '#fff'; ctx.shadowBlur = b * 2; ctx.shadowOffsetX = OFFS; ctx.translate(-OFFS, 0); ctx.stroke(path); ctx.restore();
+  }
+  const smooth = (e0, e1, x) => { const t = clamp((x - e0) / (e1 - e0), 0, 1); return t * t * (3 - 2 * t); };
+  function dropDraw(cx, cy, build, soft = 3.2, a = 1, ow = 360, oh = 360) {
+    ow += 200; oh += 200; const SW = Math.round(ow * dpr), SH = Math.round(oh * dpr); if (off.width !== SW || off.height !== SH) { off.width = SW; off.height = SH; }
+    octx.setTransform(1, 0, 0, 1, 0, 0); octx.clearRect(0, 0, SW, SH);
+    octx.setTransform(dpr, 0, 0, dpr, (ow / 2 - cx) * dpr, (oh / 2 - cy) * dpr);
+    octx.globalCompositeOperation = 'source-over'; octx.fillStyle = '#fff'; build(octx);
+    const dx = (cx - ow / 2) * dpr, dy = (cy - oh / 2) * dpr;
+    ctx.save(); ctx.globalCompositeOperation = 'lighter';
+    ctx.globalAlpha = 0.26 * a; blurImg(off, dx, dy, 70 * dpr); // la grande lueur
+    ctx.globalAlpha = 0.4 * a; blurImg(off, dx, dy, 30 * dpr); // la lueur proche
+    // un vrai flou jusque dans le cœur : aucun bord net, la goutte est faite de lumière
+    const b1 = Math.max(7, soft * 1.8), b2 = 3; // flou de 3 px sur la goutte et la canalisation
+    ctx.globalAlpha = 0.7 * a; blurImg(off, dx, dy, b1 * dpr);
+    ctx.globalAlpha = 1 * a; blurImg(off, dx, dy, b2 * dpr);
+    ctx.globalAlpha = 0.55 * a; blurImg(off, dx, dy, b2 * dpr);
+    ctx.restore();
+  }
+  // Goutte qui se forme au bord (dir 1 : sous le bord ; -1 : au-dessus). pw : largeur de la lumière encore étalée sur le bord.
+  function hanging(sx, sy, d, r, neck, srcw, a = 1, dir = 1, soft = 3.2, pw = 0, pa = 1) {
+    const cy = sy + d * dir, ow = Math.max(360, pw + 160);
+    dropDraw(sx, sy + d * dir * 0.5, (c) => {
+      if (pw > 0) { // la lumière du bord qui se rassemble vers le centre
+        const g = c.createLinearGradient(sx - pw / 2, 0, sx + pw / 2, 0);
+        g.addColorStop(0, 'rgba(255,255,255,0)'); g.addColorStop(0.15, `rgba(255,255,255,${0.35 * pa})`); g.addColorStop(0.5, `rgba(255,255,255,${pa})`); g.addColorStop(0.85, `rgba(255,255,255,${0.35 * pa})`); g.addColorStop(1, 'rgba(255,255,255,0)');
+        c.fillStyle = g; c.beginPath(); c.ellipse(sx, sy, pw / 2, 6 + 4 * (1 - clamp(pw / 700, 0, 1)), 0, 0, Math.PI * 2); c.fill(); c.fillStyle = '#fff';
+      }
+      if (r > 0.3) {
+        c.beginPath(); c.moveTo(sx - srcw, sy);
+        c.bezierCurveTo(sx - srcw * 0.4, sy + d * 0.15 * dir, sx - neck, cy - r * 1.3 * dir, sx - r, cy);
+        c.arc(sx, cy, r, Math.PI, 0, dir > 0);
+        c.bezierCurveTo(sx + neck, cy - r * 1.3 * dir, sx + srcw * 0.4, sy + d * 0.15 * dir, sx + srcw, sy);
+        c.closePath(); c.fill();
+      }
+    }, soft, a, ow);
+  }
+  // Goutte qui tombe : en se détachant elle s'écrase un peu à l'horizontale (la tension du bord la relâche),
+  // puis la vitesse l'étire à la verticale
+  function falling(x, y, r, v, a = 1, t = 1) {
+    const hz = 0.62 * (1 - Math.exp(-80 * t)) * Math.exp(-5 * t) * Math.cos(t * 10); // nettement écrasée au détachement   // > 0 : élargie ; < 0 : allongée (rebond qui s'amortit)
+    const st = Math.min(0.34, v / 4200) * (1 - Math.exp(-5 * t)); // étirement vertical dû à la vitesse
+    const rx = r * (1 + hz - st * 0.45), ry = r * (1 - hz * 0.8 + st);
+    dropDraw(x, y, (c) => { c.beginPath(); c.ellipse(x, y, rx, ry, 0, 0, Math.PI * 2); c.fill(); }, 3, a);
+  }
+  function remnant(sx, sy, t, dir = 1) { const k = clamp(t / 0.32, 0, 1); if (k < 1) hanging(sx, sy, 7 * (1 - k), 2.6 * (1 - k) + 0.4, 1.2, 7, 1 - k, dir, 3.5); }
+  function bead(x, y, rx, ry, a = 1) { dropDraw(x, y, (c) => { c.beginPath(); c.ellipse(x, y, rx, ry, 0, 0, Math.PI * 2); c.fill(); }, 3, a); }
+
+  // ---------- Particules d'éclaboussure ----------
+  let sparks = [];
+  const SPLASH = false; // true : la goutte éclabousse ; false : sa lumière est entièrement absorbée par le verre
+  function splash(x, y, dir = 1) {
+    for (let k = 0; k < 34; k++) {
+      const ang = -Math.PI / 2 * dir + (Math.random() - 0.5) * Math.PI * 0.95, sp = 120 + Math.random() * 420;
+      sparks.push({ x, y: y + camY, vx: Math.cos(ang) * sp * (0.6 + Math.random()), vy: Math.sin(ang) * sp, r: 0.6 + Math.random() * 1.9, life: 0.5 + Math.random() * 0.7, t: 0 });
+    }
+  }
+  function drawSparks(dt) {
+    ctx.save(); ctx.globalCompositeOperation = 'lighter';
+    sparks = sparks.filter((s) => (s.t += dt) < s.life);
+    for (const s of sparks) {
+      s.vy += 900 * dt; s.x += s.vx * dt; s.y += s.vy * dt; s.vx *= 0.985;
+      const a = (1 - s.t / s.life) ** 1.4;
+      const sy = s.y - camY; glow(s.x, sy, s.r * 6, 0.35 * a); ctx.fillStyle = `rgba(255,255,255,${0.9 * a})`; ctx.beginPath(); ctx.arc(s.x * dpr, sy * dpr, s.r * dpr, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  // ---------- Le moteur : une scène = une fonction de dessin par image ----------
+  let draw = null, last = 0, running = false, scrub = null;
+  function loop(now) {
+    const dt = Math.min(0.05, (now - last) / 1000 || 0.016); last = now;
+    ctx.clearRect(0, 0, cv.width, cv.height);
+    // poussière (seulement quand la caméra bouge un peu)
+    if (moving) { ctx.save(); for (const d of dust) { const yy = ((d.y * H - camY * d.z) % (H * 1.2) + H * 1.2) % (H * 1.2) - H * 0.1; ctx.fillStyle = `rgba(255,255,255,${d.a * moving})`; ctx.beginPath(); ctx.arc(d.x * W * dpr, yy * dpr, d.r * dpr, 0, Math.PI * 2); ctx.fill(); } ctx.restore(); }
+    let keep = false;
+    if (draw) keep = draw(now / 1000, dt) !== false;
+    if (sparks.length) { drawSparks(dt); keep = true; }
+    if (scrub) scrub(dt);
+    if (keep || moving || busy || B.classList.contains('awake')) requestAnimationFrame(loop); else { running = false; ctx.clearRect(0, 0, cv.width, cv.height); }
+  }
+  function kick() { if (!running) { running = true; last = performance.now(); requestAnimationFrame(loop); } }
+  let moving = 0;
+
+  // ---------- Veille : le voyant blanc, lointain, qui respire ----------
+  const B = document.body;
+  const LED0 = [226, 234, 255]; let ledColor = LED0.slice(), ledPow = 0; // veille : un blanc froid et lointain, comme Nova
+  draw = (t) => {
+    const { x, y } = LED(); const b = 0.5 + 0.5 * Math.sin(t * 1.9); // respiration lente
+    ctx.save(); ctx.globalCompositeOperation = 'lighter';
+    glow(x, y, 120, 0.04 + 0.07 * b, ledColor.join(',')); glow(x, y, 26, 0.22 + 0.32 * b, ledColor.join(',')); glow(x, y, 4, 0.8, '240,244,255');
+    ctx.restore();
+  };
+  kick();
+
+  // =====================================================================
+  // Les transitions
+  // =====================================================================
+  let cur = -1, busy = false;
+  const camTo = (i) => i * SP;
+  function anim(ms, fn) { return new Promise((res) => { const t0 = performance.now(); const step = (now) => { const p = clamp((now - t0) / (reduce ? 1 : ms), 0, 1); fn(p); if (p < 1) requestAnimationFrame(step); else res(); }; requestAnimationFrame(step); }); }
+  // Le verre se dévoile en fondu, du haut vers le bas (ou l'inverse)
+  function setReveal(p, f, fromTop = true) {
+    const g = $('.glass', p.el);
+    if (f >= 1) { g.style.removeProperty('--reveal'); return; }
+    const e = f * 170;
+    g.style.setProperty('--reveal', `linear-gradient(${fromTop ? 180 : 0}deg, #000 ${e - 70}%, rgba(0,0,0,0.78) ${e - 46}%, rgba(0,0,0,0.48) ${e - 26}%, rgba(0,0,0,0.18) ${e - 10}%, transparent ${e}%)`);
+  }
+  // Le noir gagne en douceur, par paliers
+  function setDim(p, prog, down = true) {
+    const d = $('.dim', p.el), e = prog * 190 - 14;
+    d.style.setProperty('--dim', prog <= 0 ? 'transparent' : `linear-gradient(${down ? 180 : 0}deg, #000 ${e - 86}%, rgba(0,0,0,0.85) ${e - 62}%, rgba(0,0,0,0.6) ${e - 40}%, rgba(0,0,0,0.3) ${e - 20}%, rgba(0,0,0,0.1) ${e - 6}%, rgba(0,0,0,0) ${e + 6}%)`);
+  }
+  // Rectangle réel du verre à l'écran (il suit aussi la souris)
+  const rectOf = (i) => { const p = panes.get(i); if (p) { const r = p.el.getBoundingClientRect(); return { x: r.left, y: r.top, w: r.width, h: r.height, r: 34 }; } return { x: (W - PW) / 2, y: paneTop(i) - camY, w: PW, h: PH, r: 34 }; };
+  // La bordure en lumière, en fondu vertical : 'in' = allumée au-dessus du front, 'out' = allumée en dessous
+  function rimFade(R, f, mode, a = 1, fromTop = true, bk = 0) { // bk : 0 = bord net, 1 = bord entièrement flouté
+    if (a <= 0.003) return;
+    const y0 = R.y * dpr, y1 = (R.y + R.h) * dpr, band = 0.34;
+    const grad = (base, peak) => {
+      const g = fromTop ? ctx.createLinearGradient(0, y0, 0, y1) : ctx.createLinearGradient(0, y1, 0, y0);
+      const c = (v) => clamp(v, 0, 1), A = (x) => `rgba(255,255,255,${x})`;
+      if (mode === 'in') { g.addColorStop(0, A(base)); g.addColorStop(c(f - band), A(base)); g.addColorStop(c(f - band * 0.35), A(peak)); g.addColorStop(c(f), A(0)); g.addColorStop(1, A(0)); }
+      else { g.addColorStop(0, A(0)); g.addColorStop(c(f), A(0)); g.addColorStop(c(f + band * 0.35), A(peak)); g.addColorStop(c(f + band), A(base)); g.addColorStop(1, A(base)); }
+      return g;
+    };
+    ctx.save(); ctx.globalCompositeOperation = 'lighter'; const P = new Path2D();
+    const x = R.x * dpr, y = R.y * dpr, w = R.w * dpr, h = R.h * dpr, r = R.r * dpr;
+    P.moveTo(x + r, y); P.arcTo(x + w, y, x + w, y + h, r); P.arcTo(x + w, y + h, x, y + h, r); P.arcTo(x, y + h, x, y, r); P.arcTo(x, y, x + w, y, r); P.closePath();
+    // la bordure du verre reste nette : seule la lumière qui se canalise en bas et la goutte sont floues
+    ctx.strokeStyle = grad(0.06 * a, 0.2 * a); ctx.lineWidth = 6 * dpr; blurStroke(P, 4 * dpr);
+    ctx.strokeStyle = grad(0.34 * a, 0.75 * a); ctx.lineWidth = 1.3 * dpr; blurStroke(P, 0);
+    ctx.restore();
+  }
+  function flareAt(x, y, k, a) { // éclat horizontal sur le bord
+    if (a <= 0) return;
+    ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.translate(x * dpr, y * dpr); ctx.scale(1 + k * 10, 1);
+    const g = ctx.createRadialGradient(0, 0, 0, 0, 0, 42 * dpr); g.addColorStop(0, `rgba(255,255,255,${0.55 * a})`); g.addColorStop(0.35, `rgba(255,255,255,${0.18 * a})`); g.addColorStop(1, 'rgba(255,255,255,0)');
+    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(0, 0, 42 * dpr, 0, Math.PI * 2); ctx.fill(); ctx.restore();
+  }
+
+  // L'arrivée : éclaboussure, la bordure s'allume en fondu du haut vers le bas, le verre se dévoile, puis se pose
+  async function reveal(i, fromTop = true) {
+    const p = getPane(i); resetPane(p); p.el.classList.remove('idle', 'shown', 'leaving'); const gl0 = $('.glass', p.el); gl0.style.transform = ''; gl0.style.filter = ''; $('.ring', p.el).style.opacity = '';
+    setDim(p, 0); setReveal(p, 0, fromTop); p.el.classList.add('live'); place(p);
+    const c0 = camY, c1 = camTo(i);
+    let R = rectOf(i);
+    if (SPLASH) splash(R.x + R.w / 2, fromTop ? R.y : R.y + R.h, fromTop ? 1 : -1); // atterrissage silencieux
+    setTimeout(() => { p.el.classList.add('shown'); setTimeout(() => startDemo(p), 800); }, 550);
+    kick();
+    await anim(2300, (q) => {
+      camY = lerp(c0, c1, eio(clamp(q / 0.62, 0, 1))); place(p); R = rectOf(i);
+      const f = eout(clamp(q / 0.85, 0, 1)) * 1.1, fl = SPLASH ? clamp(q * 2, 0, 1) : eout(clamp(q / 0.2, 0, 1));
+      const sp = eout(clamp(q / 0.16, 0, 1)), spA = 1 - smooth(0.12, 0.42, q); // la lumière file le long du bord (~370 ms)
+      const ab = clamp(q / 0.085, 0, 1); // la goutte est bue par le bord du verre (~200 ms)
+      draw = () => {
+        rimFade(R, f, 'in', 1, fromTop); const ex = R.x + R.w / 2, ey = fromTop ? R.y : R.y + R.h;
+        flareAt(ex, ey, fl, (1 - fl) * (SPLASH ? 1 : 1.25));
+        if (!SPLASH && spA > 0) { // la lumière absorbée se diffuse vite vers les deux coins
+          const hw = (R.w / 2 - 20) * sp, g = ctx.createLinearGradient((ex - hw) * dpr, 0, (ex + hw) * dpr, 0);
+          g.addColorStop(0, 'rgba(255,255,255,0)'); g.addColorStop(0.2, `rgba(255,255,255,${0.5 * spA})`); g.addColorStop(0.5, `rgba(255,255,255,${0.95 * spA})`); g.addColorStop(0.8, `rgba(255,255,255,${0.5 * spA})`); g.addColorStop(1, 'rgba(255,255,255,0)');
+          const L = new Path2D(); L.moveTo((ex - hw) * dpr, ey * dpr); L.lineTo((ex + hw) * dpr, ey * dpr);
+          ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.strokeStyle = g; ctx.lineCap = 'round';
+          ctx.lineWidth = 8 * dpr; ctx.globalAlpha = 0.35; blurStroke(L, 6 * dpr); ctx.globalAlpha = 1; ctx.lineWidth = 1.6 * dpr; blurStroke(L, 0); ctx.restore();
+        }
+        if (!SPLASH && ab < 1) { // elle s'enfonce dans le bord en s'aplatissant, sa lumière passe dans la bordure
+          const k = eout(ab), rx = 10 * (1 + 0.9 * k), ry = 10 * (1 - k) + 0.6, cy = ey - (fromTop ? 1 : -1) * ry * 0.35;
+          dropDraw(ex, cy, (c) => { c.beginPath(); c.ellipse(ex, cy, rx, ry, 0, 0, Math.PI * 2); c.fill(); }, 3, 1 - k * k);
+        }
+      };
+      setReveal(p, eio(clamp((q - 0.04) / 0.92, 0, 1)), fromTop);
+    });
+    camY = c1; place(p); setReveal(p, 1);
+    p.el.classList.add('idle');
+    await anim(800, (q) => { R = rectOf(i); draw = () => rimFade(R, 1.2, 'in', 1 - q, fromTop); });
+    draw = null;
+    return p;
+  }
+
+  // ---------- Le départ, piloté par la molette ----------
+  // pull : 0 = au repos ; vers 1 la présentation s'éteint et la goutte se forme ; à 1 elle tombe. Négatif = vers le haut.
+  let pull = 0, pullT = 0, lastIn = 0, jump = null;
+  const NEED = 1;
+  function applyPull(p, v) {
+    const a = Math.abs(v), down = v >= 0, sgn = down ? 1 : -1;
+    const P = getPane(cur), gl = $('.glass', P.el), ring = $('.ring', P.el);
+    const dim = smooth(0, 0.82, a);
+    setDim(P, dim, down);
+    gl.style.transform = a ? `translateY(${sgn * 50 * dim}px) scale(${1 - 0.02 * dim})` : ''; gl.style.filter = a ? `blur(${6 * dim}px)` : '';
+    ring.style.opacity = a ? String(1 - smooth(0, 0.3, a)) : '';
+    P.el.classList.toggle('leaving', a > 0.16); if (a < 0.08 && !P.el.classList.contains('shown')) P.el.classList.add('shown');
+    if (a > 0.16) P.el.classList.remove('shown');
+    // la caméra accompagne la lumière quand la goutte se forme
+    const R0 = { x: (W - PW) / 2, y: paneTop(cur) - camTo(cur), w: PW, h: PH };
+    const edgeY = down ? R0.y + R0.h : R0.y, aim = down ? H * 0.42 : H * 0.58;
+    camY = camTo(cur) + (edgeY - aim) * smooth(0.55, 1, a); place(P);
+    const R = rectOf(cur), sx = R.x + R.w / 2, sy = down ? R.y + R.h : R.y;
+    const bk = smooth(0.08, 0.6, a);                                      // la bordure se floute dès que la lumière se canalise
+    const f = smooth(0, 0.9, a) * 0.8;                                    // le front s'arrête avant le bas : la bordure reste un peu visible
+    const lg = smooth(0.34, 0.9, a), s = smooth(0.52, 1, a);              // la lumière se rassemble, puis la goutte grossit
+    const ra = 1 - 0.62 * smooth(0.34, 0.85, a);                          // elle s'atténue, mais ne s'éteint qu'au départ de la goutte
+    const pw = (R.w - 30) * (1 - 0.18 * lg), pa = 0.12 + 0.38 * lg;
+    const r = 1 + 8 * s, d = r * (0.3 + 2 * s), neck = r * (1 - 0.7 * s), soft = 9 - 4.4 * s;
+    moving = 0.3 * smooth(0.6, 1, a) * (1 - smooth(0.95, 1, a));
+    draw = a < 0.004 ? null : () => {
+      rimFade(R, f, 'out', ra, down, bk);
+      if (a > 0.34) hanging(sx, sy, d, r, neck, 14 + 14 * (1 - s), smooth(0.34, 0.6, a), sgn, soft, pw, pa);
+    };
+    return { sx, sy, d, r, f, ra, pw, pa, soft, neck, bk };
+  }
+  scrub = (dt) => {
+    if (busy || cur < 0) return;
+    const idle = performance.now() - lastIn > 2600;
+    if (idle && jump == null) pullT *= 0.965; // sans action, la goutte se résorbe doucement
+    // pas de suivant (ou de précédent) : on peut tirer un peu, puis ça résiste
+    if (pullT > 0 && cur >= CH.length - 1) pullT = Math.min(pullT, 0.32);
+    if (pullT < 0 && cur <= 0) pullT = Math.max(pullT, -0.32);
+    pull += (pullT - pull) * Math.min(1, dt * 7);
+    if (Math.abs(pull - pullT) < 0.0005) pull = pullT;
+    const g = applyPull(null, pull);
+    if (pull >= NEED * 0.995 && cur < CH.length - 1) drop(1, g);
+    else if (pull <= -NEED * 0.995 && cur > 0) drop(-1, g);
+  };
+  async function drop(dir, g) {
+    busy = true; const from = cur; const to = jump != null ? jump : from + dir; jump = null;
+    pull = pullT = 0; stopDemo(getPane(from));
+    const pf = getPane(from), pt = getPane(to);
+    const sgn = dir > 0 ? 1 : -1, r0 = g.r, d0 = g.d;
+    await anim(560, (k) => {
+      const e = eio(k), pw = lerp(g.pw, 10, e), pa = lerp(g.pa, 1, e) * (1 - smooth(0.75, 1, k));
+      g.r = lerp(r0, 10, e); g.d = lerp(d0, 10 * 2.6, e);
+      const neck = lerp(g.neck, g.r * 0.16, e), Rf = rectOf(from);
+      draw = () => { rimFade(Rf, g.f, 'out', g.ra * (1 - 0.45 * e), dir > 0, 1); hanging(g.sx, g.sy, g.d, g.r, neck, lerp(14, 8, e), 1, sgn, lerp(g.soft, 4.2, e), pw, pa); };
+    });
+    g.ra *= 0.55;
+    pt.el.classList.add('live'); setReveal(pt, 0, dir > 0); setDim(pt, 0);
+    if (dir > 0) {
+      const srcWorld = g.sy + camY, sWorld = g.sy + g.d + camY;
+      await follow(g.sx, sWorld, paneTop(to), g.sy + g.d, { place: () => { place(pf); place(pt); }, draw: (q) => { rimFade(rectOf(from), g.f, 'out', g.ra * (1 - smooth(0, 0.22, q)), true, 1); remnant(g.sx, srcWorld - camY, q * 1.4); approach(to, H * 0.5, 1); } });
+    } else {
+      const srcWorld = g.sy + camY, sWorld = g.sy - g.d + camY;
+      await follow(g.sx, sWorld, paneTop(to) + PH, g.sy - g.d, { place: () => { place(pf); place(pt); }, draw: (q) => { rimFade(rectOf(from), g.f, 'out', g.ra * (1 - smooth(0, 0.22, q)), false, 1); remnant(g.sx, srcWorld - camY, q * 1.4, -1); approach(to, H * 0.5, -1); } }, -1);
+    }
+    pf.el.classList.remove('live', 'leaving'); setDim(pf, 0); $('.glass', pf.el).style.transform = ''; $('.glass', pf.el).style.filter = '';
+    cur = to; ui(); setHash(CH[cur].id);
+    await reveal(to, dir > 0);
+    busy = false; lastIn = 0;
+  }
+
+  // La goutte tombe (ou remonte) et la caméra la suit : elle reste au milieu, le verre suivant vient à sa rencontre
+  async function follow(sx, sWorld, eWorld, sy0, extra, dir = 1) {
+    const T = clamp(Math.sqrt(Math.max(1, Math.abs(eWorld - sWorld)) / H) * 1350, 1150, 2000);
+    const FOLLOW = H * 0.5;
+    B.classList.add('moving'); let prevY = sWorld;
+    await anim(T, (q) => {
+      const k = dir > 0 ? q * q : eio(q);
+      const wy = lerp(sWorld, eWorld, k), v = Math.abs(wy - prevY) / 0.016; prevY = wy;
+      const syNow = lerp(sy0, FOLLOW, eio(clamp(q / 0.6, 0, 1)));
+      camY = wy - syNow; moving = Math.sin(Math.PI * Math.min(1, q * 1.2)) * 0.9;
+      extra.place();
+      draw = () => { extra.draw(q); if (dir > 0) falling(sx, syNow, 10, v, 1, q * T / 1000); else bead(sx, syNow, 8, 8.6, 0.9); };
+    });
+    moving = 0; B.classList.remove('moving');
+  }
+  function approach(to, y, dir = 1) { // le bord du verre qui arrive capte déjà la lumière de la goutte
+    const R = rectOf(to), edge = dir > 0 ? R.y : R.y + R.h; const near = clamp(1 - Math.abs(edge - y) / (H * 0.45), 0, 1);
+    if (near > 0) flareAt(R.x + R.w / 2, edge, 0.6 + near * 2, near * near * 0.5);
+  }
+
+  // ---------- Réveil ----------
+  async function wake(target = 0) {
+    if (busy || cur >= 0) return; busy = true;
+    $('#wake').classList.add('gone'); B.classList.add('waking');
+    try { actx = actx || new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {}
+    const { x, y } = LED();
+    hum();
+    // la lumière devient blanche et grandit, petit à petit
+    await anim(1700, (q) => {
+      const e = eio(q); ledColor = LED0.map((c) => Math.round(lerp(c, 255, e)));
+      draw = () => { ctx.save(); ctx.globalCompositeOperation = 'lighter'; const c = ledColor.join(','); glow(x, y, 120 + 150 * e, 0.12 + 0.14 * e, c); glow(x, y, 26 + 22 * e, 0.6 + 0.3 * e, c); glow(x, y, 4.5 + 3 * e, 1, '255,255,255'); ctx.restore(); };
+    });
+    // elle s'accumule en goutte, d'abord très floue, puis de plus en plus nette
+    await anim(1500, (q) => {
+      const e = eio(q), r = 2 + 8 * e, d = r * (0.3 + 2.4 * e), neck = r * (1 - 0.85 * e), soft = 9 - 6.6 * e;
+      draw = () => { ctx.save(); ctx.globalCompositeOperation = 'lighter'; glow(x, y, 270 - 80 * e, 0.26 - 0.1 * e); glow(x, y, 46, 0.85 - 0.35 * e); ctx.restore(); hanging(x, y + 2, d, r, neck, 9, Math.min(1, 0.4 + e), 1, soft); };
+    });
+    B.classList.add('awake');
+    const pt = getPane(target); pt.el.classList.add('live'); setReveal(pt, 0);
+    const ledWorld = y + camY, d0 = 10 * 2.7;
+    await follow(x, y + 2 + d0 + camY, paneTop(target), y + 2 + d0, {
+      place: () => place(pt),
+      draw: (q) => { const ly = ledWorld - camY; ctx.save(); ctx.globalCompositeOperation = 'lighter'; glow(x, ly, 70, 0.3 * (1 - q)); glow(x, ly, 5, 0.8 * (1 - q)); ctx.restore(); remnant(x, ly + 2, q * 1.6); approach(target, H * 0.5); },
+    });
+    cur = target; ui(); setHash(CH[cur].id);
+    await reveal(target, true);
+    busy = false; lastIn = 0;
+  }
+  $('#wake').addEventListener('click', () => wake(0));
+
+  // ---------- Navigation : la molette (ou le doigt) pilote la goutte ----------
+  const dots = $('#dots');
+  dots.innerHTML = CH.map((c, i) => `<button type="button" aria-label="${c.label}"><span>${c.label}</span></button>`).join('');
+  $$('button', dots).forEach((b, i) => b.addEventListener('click', () => autoTo(i)));
+  function autoTo(i) { if (busy || cur < 0 || i === cur || i < 0 || i >= CH.length) return; jump = i; lastIn = performance.now(); pullT = i > cur ? 1.06 : -1.06; }
+  function ui() {
+    $$('button', dots).forEach((b, i) => b.setAttribute('aria-current', i === cur));
+    $('#count').textContent = `${String(cur + 1).padStart(2, '0')} / ${CH.length}`;
+    $('#hint').lastElementChild.textContent = cur === CH.length - 1 ? 'Remontez quand vous voulez' : 'Faites défiler';
+  }
+  addEventListener('wheel', (e) => {
+    if (cur < 0) return; e.preventDefault(); if (busy) return;
+    const dy = e.deltaMode === 1 ? e.deltaY * 36 : e.deltaMode === 2 ? e.deltaY * H : e.deltaY;
+    jump = null; lastIn = performance.now(); pullT = clamp(pullT + dy / 900, -1.06, 1.06);
+  }, { passive: false });
+  let ty = null, tp = 0;
+  addEventListener('touchstart', (e) => { ty = e.touches[0].clientY; tp = pullT; }, { passive: true });
+  addEventListener('touchmove', (e) => { if (ty == null || cur < 0 || busy) return; jump = null; lastIn = performance.now(); pullT = clamp(tp + (ty - e.touches[0].clientY) / (H * 0.55), -1.06, 1.06); }, { passive: true });
+  addEventListener('touchend', () => { ty = null; }, { passive: true });
+  addEventListener('keydown', (e) => {
+    if (cur < 0) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); wake(0); } return; }
+    if (['ArrowDown', 'PageDown', ' '].includes(e.key)) { e.preventDefault(); autoTo(cur + 1); }
+    if (['ArrowUp', 'PageUp'].includes(e.key)) { e.preventDefault(); autoTo(cur - 1); }
+  });
+  $('#mute').addEventListener('click', (e) => { muted = !muted; e.currentTarget.setAttribute('aria-pressed', muted); e.currentTarget.style.opacity = muted ? 0.45 : 1; });
+
+  // Le verre suit un peu la souris (haut / bas), et son reflet suit le curseur
+  addEventListener('pointermove', (e) => {
+    document.documentElement.style.setProperty('--fy', `${((e.clientY / H) - 0.5) * 26}px`);
+    document.documentElement.style.setProperty('--fx', `${((e.clientX / W) - 0.5) * 8}px`);
+    const p = panes.get(cur); if (!p) return;
+    const r = p.el.getBoundingClientRect(), ring = $('.ring', p.el);
+    const cx = clamp(e.clientX, r.left, r.right), cy = clamp(e.clientY, r.top, r.bottom), d = Math.hypot(e.clientX - cx, e.clientY - cy);
+    ring.style.setProperty('--hx', `${((cx - r.left) / r.width) * 100}%`); ring.style.setProperty('--hy', `${((cy - r.top) / r.height) * 100}%`); ring.style.setProperty('--pk', (0.32 + 0.6 * Math.exp(-d / 240)).toFixed(3));
+    p.el.style.setProperty('--mx', `${e.clientX - r.left}px`); p.el.style.setProperty('--my', `${e.clientY - r.top}px`);
+  }, { passive: true });
+
+  addEventListener('resize', () => { layout(); size(); document.documentElement.style.setProperty('--ledy', LED().y + 'px'); if (cur >= 0) { camY = camTo(cur); panes.forEach(place); } });
+  function setHash(id) { try { history.replaceState(null, '', `#${id}`); } catch (e) {} }
+  // Lien direct (…#tarif) : MIRYS se réveille et la goutte tombe directement sur la bonne présentation
+  const h = location.hash.slice(1), hi = CH.findIndex((c) => c.id === h);
+  if (hi >= 0) setTimeout(() => wake(hi), 700);
+})();
+</script>
+
+</body>
+</html>
