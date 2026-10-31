@@ -1,0 +1,932 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#000000">
+<meta property="og:title" content="MIRYS">
+<meta property="og:description" content="MIRYS est en veille. Réveillez-la.">
+<meta property="og:image" content="img/poster.jpg">
+<title>MIRYS</title>
+<meta name="description" content="MIRYS est en veille. Réveillez-la.">
+<link rel="icon" type="image/png" href="img/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap">
+<style>
+/* Noir complet. Une seule lumière : le voyant de MIRYS en veille. Réveillée, la lumière devient une goutte qui tombe,
+   s'écrase sur un verre noir invisible et en allume le contour. Chaque présentation vit dans un de ces verres ;
+   on passe à la suivante en faisant défiler : la lumière glisse vers le bas, éteint tout, et goutte à nouveau. */
+:root {
+  color-scheme: dark;
+  --void: #000;
+  --text: #f4f4f7;
+  --soft: rgba(244, 244, 247, 0.74);
+  --muted: rgba(244, 244, 247, 0.46);
+  --ok: #4ade80;
+  --standby: #e2eaff;
+  --liquid: cubic-bezier(0.22, 1, 0.36, 1);
+  --spring: cubic-bezier(0.2, 0.9, 0.25, 1.12);
+  --out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-soft: cubic-bezier(0.34, 1.32, 0.64, 1);
+  --land: cubic-bezier(0.3, 0.95, 0.3, 1.04);
+  --glass: linear-gradient(180deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0) 30%), linear-gradient(180deg, #050507 20%, rgba(5, 5, 7, 0.6) 100%);
+  --glass-open: radial-gradient(120% 50% at 50% -18%, rgba(255, 255, 255, 0.06), transparent 62%), linear-gradient(180deg, #050507 20%, rgba(5, 5, 7, 0.82) 100%);
+  --card: rgba(20, 20, 25, 0.86);
+  --card-sheen: linear-gradient(160deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.015) 50%, rgba(255, 255, 255, 0.04));
+  --nova: linear-gradient(135deg, #5b8cff, #a855f7);
+  --ui: "Segoe UI Variable Text", "Segoe UI", Inter, system-ui, sans-serif;
+  --display: "Segoe UI Variable Display", "Segoe UI", Inter, system-ui, sans-serif;
+  --mark: Inter, "Segoe UI", system-ui, sans-serif;
+  --ink: var(--text);
+  --mute: #8b8b96;
+}
+*, *::before, *::after { box-sizing: border-box; }
+html, body { height: 100%; }
+html { background: #000; }
+body { margin: 0; overflow: hidden; background: #000; color: var(--text); font-family: var(--ui); font-size: 15px; -webkit-font-smoothing: antialiased; touch-action: none; }
+button, input { font: inherit; color: inherit; }
+a { color: inherit; }
+svg { fill: currentColor; }
+:focus-visible { outline: 2px solid rgba(255, 255, 255, 0.6); outline-offset: 3px; }
+
+/* =====================================================================
+   LA SCÈNE : la vraie MIRYS, filmée sur un PC (une vidéo par fonctionnalité)
+   ===================================================================== */
+.stage { position: absolute; inset: 0; border-radius: inherit; overflow: hidden; }
+.stage .cam { position: absolute; left: 21%; right: 0; top: 0; aspect-ratio: 16 / 9; max-height: 100%; }
+.stage .cam { -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 24%, #000 90%, transparent 100%), linear-gradient(180deg, #000 0%, #000 58%, transparent 100%); -webkit-mask-composite: source-in; mask-image: linear-gradient(90deg, transparent 0%, #000 24%, #000 90%, transparent 100%), linear-gradient(180deg, #000 0%, #000 58%, transparent 100%); mask-composite: intersect; }
+.stage video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 50%; opacity: 0; background: transparent; transition: opacity 0.42s ease; }
+.stage video.on { opacity: 1; }
+/* le texte se lit dans le noir, en bas à gauche */
+.stage .shade { position: absolute; inset: 0; pointer-events: none; background: linear-gradient(90deg, rgba(0, 0, 0, 0.7) 0%, rgba(0, 0, 0, 0.3) 30%, rgba(0, 0, 0, 0) 44%); }
+@media (min-width: 761px) { .body > .copy { left: 4.5%; width: min(400px, 30%); } }
+/* Changement d'onglet : l'obscurité passe, un reflet traverse le verre */
+.stage .veil { position: absolute; inset: 0; z-index: 2; pointer-events: none; opacity: 0; background: radial-gradient(120% 90% at 60% 30%, rgba(0, 0, 0, 0.82), #000 75%); }
+.pane .glint { position: absolute; inset: 0; z-index: 7; border-radius: inherit; overflow: hidden; pointer-events: none; }
+.pane .glint::before { content: ''; position: absolute; top: -30%; bottom: -30%; left: -40%; width: 40%; opacity: 0; transform: translateX(0) skewX(-16deg);
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.05) 35%, rgba(255, 255, 255, 0.13) 50%, rgba(255, 255, 255, 0.05) 65%, rgba(255, 255, 255, 0) 100%); }
+.pane.swap .glint::before { animation: glint 0.95s cubic-bezier(0.45, 0.05, 0.25, 1) both; }
+@keyframes glint { 0% { opacity: 0; transform: translateX(0) skewX(-16deg); } 18% { opacity: 1; } 80% { opacity: 1; } 100% { opacity: 0; transform: translateX(380%) skewX(-16deg); } }
+.pane.swap .ring { --pk: 0.95 !important; }
+.pane .poster { position: absolute; inset: 0; background: center top / cover no-repeat; opacity: 0; transition: opacity 0.4s ease; }
+
+/* Les onglets : au-dessus du verre, comme les onglets des réglages de MIRYS */
+.tabs { position: absolute; left: 4px; bottom: calc(100% + 14px); z-index: 9; display: flex; padding: 3px; border-radius: 999px; max-width: calc(100% - 8px); overflow-x: auto; scrollbar-width: none;
+  background: var(--glass); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45); }
+.tabs::-webkit-scrollbar { display: none; }
+.tabs::before { content: ''; position: absolute; inset: 0; border-radius: inherit; padding: 1px; pointer-events: none;
+  background: radial-gradient(circle 70px at var(--tx, 100%) 0%, rgba(255, 255, 255, 0.55) 0%, rgba(255, 255, 255, 0.2) 40%, rgba(255, 255, 255, 0) 100%), radial-gradient(circle 50px at 0% 100%, rgba(255, 255, 255, 0.24) 0%, rgba(255, 255, 255, 0) 100%), linear-gradient(rgba(140, 140, 150, 0.16), rgba(140, 140, 150, 0.16));
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude; }
+.tab { position: relative; z-index: 1; flex: none; height: 34px; padding: 0 16px; white-space: nowrap; border: 0; background: none; border-radius: 999px; cursor: pointer;
+  font-size: 13.5px; font-weight: 600; color: rgba(255, 255, 255, 0.5); transition: color 0.2s ease;
+  opacity: 0; filter: blur(8px); transform: translateY(8px); }
+.tab:hover { color: rgba(255, 255, 255, 0.82); }
+.tab[aria-selected='true'] { color: #fff; }
+.tab-glow { position: absolute; top: 3px; bottom: 3px; left: 0; width: 0; border-radius: 999px; pointer-events: none; opacity: 0;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.17), rgba(255, 255, 255, 0.07)); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22), 0 2px 8px rgba(0, 0, 0, 0.35);
+  transition: transform 0.34s cubic-bezier(0.2, 0.9, 0.25, 1.04), width 0.34s cubic-bezier(0.2, 0.9, 0.25, 1.04), opacity 0.3s ease; }
+/* Elles arrivent en dernier, et repartent en premier */
+.tabs { opacity: 0; transform: translateY(6px); transition: opacity 0.35s ease, transform 0.5s var(--out); pointer-events: none; }
+.pane.tabs-in .tabs { opacity: 1; transform: none; pointer-events: auto; }
+.pane.tabs-in .tab { animation: tab-in 0.6s var(--liquid) forwards; animation-delay: var(--d, 0ms); }
+.pane.tabs-in .tab-glow { opacity: 1; transition-delay: 0s, 0s, 0.25s; }
+@keyframes tab-in { to { opacity: 1; filter: none; transform: none; } }
+.pane.tabs-out .tabs { opacity: 0; transform: translateY(-6px); transition: opacity 0.22s ease, transform 0.3s ease; pointer-events: none; }
+.pane.tabs-out .tab { animation: none; opacity: 1; filter: none; transform: none; }
+
+/* Le texte change avec l'onglet : il part dans le flou, le nouveau arrive du flou */
+.copy.out .rv { animation: word-out 0.32s var(--liquid) forwards !important; animation-delay: var(--o, 0ms) !important; }
+
+
+
+/* ---------- La lumière (canvas plein écran, au-dessus de tout le reste) ---------- */
+#fx { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 40; pointer-events: none; }
+
+/* ---------- Veille ---------- */
+.wake { position: fixed; inset: 0; z-index: 30; display: block; border: 0; padding: 0; background: transparent; cursor: pointer; }
+.wake span { position: absolute; left: 50%; top: calc(var(--ledy, 30vh) + 64px); transform: translateX(-50%); font-family: var(--display); font-size: clamp(15px, 1.4vw, 18px); font-weight: 400; letter-spacing: 0.32em; text-transform: uppercase; color: rgba(255, 255, 255, 0.16); white-space: nowrap; transition: color 0.6s ease, opacity 0.6s ease, letter-spacing 1.2s var(--liquid); }
+.wake:hover span, .wake:focus-visible span { color: rgba(255, 255, 255, 0.32); letter-spacing: 0.4em; }
+.wake.gone { pointer-events: none; }
+.wake.gone span { opacity: 0; letter-spacing: 0.6em; }
+
+/* ---------- Les verres ---------- */
+.pane { position: fixed; left: 50%; top: 0; z-index: 10; translate: var(--fx, 0px) var(--fy, 0px); transition: translate 1.1s cubic-bezier(0.22, 1, 0.36, 1); width: var(--pw); height: var(--ph); margin-left: calc(var(--pw) / -2); border-radius: 34px; isolation: isolate; visibility: hidden; will-change: transform; }
+.pane.live { visibility: visible; }
+.pane .glass { position: absolute; inset: 0; border-radius: inherit; overflow: hidden; background: radial-gradient(120% 60% at 50% -12%, rgba(255, 255, 255, 0.055), transparent 60%), linear-gradient(180deg, #08080b, #030304);
+  box-shadow: 0 50px 160px rgba(0, 0, 0, 0.9); -webkit-mask-image: var(--reveal, none); mask-image: var(--reveal, none); }
+.pane .sheen { position: absolute; inset: 0; z-index: 6; border-radius: inherit; pointer-events: none; background: radial-gradient(520px circle at var(--mx, 50%) var(--my, -30%), rgba(255, 255, 255, 0.05), transparent 62%); opacity: 0; transition: opacity 0.8s ease; }
+.pane.idle .sheen { opacity: 1; }
+/* Contour au repos : le reflet de MIRYS qui suit le curseur */
+.pane .ring { position: absolute; inset: 0; z-index: 7; border-radius: inherit; padding: 1px; pointer-events: none; opacity: 0; transition: opacity 0.6s ease;
+  background:
+    radial-gradient(circle var(--hr) at var(--hx) var(--hy), rgba(255, 255, 255, var(--pk)) 0%, rgba(255, 255, 255, calc(var(--pk) * 0.4)) 40%, rgba(255, 255, 255, 0) 100%),
+    radial-gradient(circle calc(var(--hr) * 0.75) at calc(100% - var(--hx)) calc(100% - var(--hy)), rgba(255, 255, 255, calc(var(--pk) * 0.45)) 0%, rgba(255, 255, 255, 0) 100%),
+    linear-gradient(rgba(150, 150, 160, 0.2), rgba(150, 150, 160, 0.2));
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude;
+  --hr: 220px; transition: opacity 0.6s ease, --hx 0.6s cubic-bezier(0.25, 0.8, 0.3, 1), --hy 0.6s cubic-bezier(0.25, 0.8, 0.3, 1), --pk 0.5s ease; }
+.pane.idle .ring { opacity: 1; }
+/* Le noir qui gagne quand la lumière s'en va */
+.pane .dim { position: absolute; inset: -72px -4px; z-index: 8; border-radius: inherit; pointer-events: none; background: var(--dim, transparent); }
+
+.pane .body { position: absolute; inset: 0; border-radius: inherit; }
+.pane .board { position: absolute; inset: 0; }
+/* Le texte de la présentation : en bas à gauche, dans le noir */
+.copy { position: absolute; z-index: 5; left: 5.5%; bottom: 8%; width: min(440px, 38%); display: flex; flex-direction: column; gap: 14px; }
+.when { display: inline-flex; align-items: center; gap: 9px; align-self: flex-start; height: 30px; padding: 0 14px 0 11px; border-radius: 15px; font-size: 12.5px; font-weight: 600; letter-spacing: 0.03em; font-variant-numeric: tabular-nums; background: var(--glass); box-shadow: inset 0 0 0 1px rgba(150, 150, 160, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.08); }
+.when i { width: 7px; height: 7px; border-radius: 50%; background: var(--ok); box-shadow: 0 0 8px var(--ok); }
+.copy h2, .plain h2 { margin: 0; font-family: var(--display); font-size: clamp(34px, 3.9vw, 58px); font-weight: 700; letter-spacing: -0.035em; line-height: 1.02; text-wrap: balance; color: #f6f6f8; }
+.copy p, .plain .lede { margin: 0; font-size: clamp(15px, 1.15vw, 17px); line-height: 1.55; color: var(--soft); text-wrap: pretty; }
+.copy .acts2 { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
+
+/* Les mots arrivent du flou, comme dans MIRYS Mail ; ils repartent dans le flou */
+.rv { opacity: 0; filter: blur(10px); transform: translateY(12px); }
+.pane.shown .rv { animation: word-in 0.95s var(--liquid) forwards; animation-delay: var(--d, 0ms); }
+.pane.leaving .rv { animation: word-out 0.5s var(--liquid) forwards; animation-delay: var(--o, 0ms); opacity: 1; filter: none; transform: none; }
+@keyframes word-in { to { opacity: 1; filter: none; transform: none; } }
+@keyframes word-out { from { opacity: 1; filter: none; transform: none; } to { opacity: 0; filter: blur(9px); transform: translateY(-10px); } }
+.w { display: inline-block; }
+
+/* Pastilles (boutons) façon MIRYS Mail */
+.pill { position: relative; display: inline-flex; align-items: center; gap: 8px; height: 40px; padding: 0 18px 0 16px; border-radius: 999px; cursor: pointer; white-space: nowrap; text-decoration: none; border: 0; color: #fff; font-weight: 600; font-size: 14px;
+  background: var(--glass); box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35); transition: transform 0.42s var(--ease-soft), box-shadow 0.45s ease; }
+.pill::before { content: ''; position: absolute; inset: 0; border-radius: inherit; padding: 1px; pointer-events: none;
+  background: radial-gradient(circle 44px at 100% 0%, rgba(255, 255, 255, 0.55) 0%, rgba(255, 255, 255, 0.2) 40%, rgba(255, 255, 255, 0) 100%), radial-gradient(circle 33px at 0% 100%, rgba(255, 255, 255, 0.28) 0%, rgba(255, 255, 255, 0) 100%), linear-gradient(rgba(140, 140, 150, 0.15), rgba(140, 140, 150, 0.15));
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude; }
+.pill:hover { transform: scale(1.04); box-shadow: 0 8px 22px rgba(0, 0, 0, 0.45); }
+.pill:active { transform: scale(0.97); }
+.pill.white { color: #0b0b0e; background: linear-gradient(180deg, #fff, #e6e6eb); box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35), 0 0 22px rgba(255, 255, 255, 0.16); }
+.pill.white::before { display: none; }
+.pill svg { width: 16px; height: 16px; flex: none; }
+.pill.sm { height: 34px; padding: 0 14px 0 12px; font-size: 13px; }
+.seg { position: relative; display: inline-flex; padding: 3px; border-radius: 999px; background-color: var(--card); background-image: var(--card-sheen); border: 1px solid rgba(255, 255, 255, 0.09); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14); }
+.seg button { position: relative; z-index: 1; height: 32px; padding: 0 15px; border: none; border-radius: 999px; background: none; color: var(--muted); cursor: pointer; font-size: 13px; font-weight: 600; transition: color 0.25s ease; }
+.seg button[aria-selected='true'] { color: #0b0b0e; font-weight: 700; }
+.seg-glow { position: absolute; top: 3px; left: 3px; height: 32px; border-radius: 999px; background: #fff; transition: transform 0.55s var(--liquid), width 0.55s var(--liquid); }
+
+/* Présentations sans bureau : texte et cartes au centre du verre */
+.plain { position: absolute; inset: 0; z-index: 5; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; padding: 6% 7%; text-align: center; }
+.plain .lede { max-width: 34em; }
+.tiles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; width: 100%; max-width: 980px; margin-top: 8px; text-align: left; }
+.tiles div { padding: 18px 18px 20px; border-radius: 22px; background-color: var(--card); background-image: var(--card-sheen); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), 0 8px 22px rgba(0, 0, 0, 0.3); }
+.tiles b { display: block; font-size: 15px; margin-bottom: 6px; }
+.tiles span { font-size: 13.5px; line-height: 1.5; color: var(--soft); }
+.price { display: flex; align-items: baseline; justify-content: center; gap: 12px; }
+.price b { font-family: var(--display); font-size: clamp(64px, 8vw, 116px); font-weight: 700; letter-spacing: -0.045em; line-height: 0.95; background: linear-gradient(180deg, #fff, #c9c9d0); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.price span { font-size: 18px; color: var(--muted); }
+.ticks { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; justify-content: center; gap: 8px 22px; color: var(--soft); font-size: 14.5px; }
+.ticks li { display: flex; align-items: center; gap: 9px; }
+.ticks li::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--ok); box-shadow: 0 0 8px var(--ok); }
+.ctas { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 4px; }
+.fine { font-size: 12.5px; color: var(--muted); }
+.vid { position: relative; width: min(860px, 100%); aspect-ratio: 16 / 9; border-radius: 22px; overflow: hidden; background: #000; box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08), 0 30px 80px rgba(0, 0, 0, 0.6); }
+.vid video { display: block; width: 100%; height: 100%; object-fit: cover; }
+.vid button { position: absolute; inset: 0; border: 0; cursor: pointer; display: grid; place-items: center; background: linear-gradient(180deg, rgba(0, 0, 0, 0.05), rgba(0, 0, 0, 0.45)); }
+.vid button span { display: inline-flex; align-items: center; gap: 10px; height: 54px; padding: 0 24px 0 18px; border-radius: 27px; font-weight: 700; color: #fff; background: var(--glass); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.2), 0 20px 50px rgba(0, 0, 0, 0.5); transition: transform 0.4s var(--ease-soft); }
+.vid button:hover span { transform: scale(1.05); }
+.vid button[hidden] { display: none; }
+.vid button svg { width: 20px; height: 20px; }
+.wordmark { font-family: var(--mark); font-weight: 900; letter-spacing: 0.16em; margin-right: -0.16em; font-size: clamp(40px, 6vw, 84px); line-height: 1; background: linear-gradient(180deg, #fff 0%, #e9e9ee 40%, #8d8d98 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+
+/* ---------- Ce qui entoure le verre (discret) ---------- */
+.m-show { display: none; }
+.chrome { position: fixed; z-index: 35; opacity: 0; pointer-events: none; transition: opacity 1.2s ease; }
+body.awake .chrome { opacity: 1; pointer-events: auto; }
+.brand { left: max(26px, env(safe-area-inset-left, 0px)); top: calc(22px + env(safe-area-inset-top, 0px)); font-family: var(--mark); font-weight: 900; font-size: 13px; letter-spacing: 0.32em; color: rgba(255, 255, 255, 0.42); }
+.corner { right: max(22px, env(safe-area-inset-right, 0px)); top: calc(16px + env(safe-area-inset-top, 0px)); display: flex; gap: 8px; }
+.round { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; cursor: pointer; padding: 0; border: 1px solid rgba(255, 255, 255, 0.14); background: rgba(255, 255, 255, 0.06); color: rgba(255, 255, 255, 0.7); transition: background 0.3s ease, color 0.3s ease, transform 0.35s var(--ease-soft); }
+.round:hover { background: rgba(255, 255, 255, 0.14); color: #fff; transform: scale(1.06); }
+.round svg { width: 16px; height: 16px; }
+.dots { right: max(22px, env(safe-area-inset-right, 0px)); top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; gap: 4px; }
+.dots button { position: relative; width: 22px; height: 18px; border: 0; padding: 0; background: none; cursor: pointer; }
+.dots button::after { content: ''; position: absolute; right: 4px; top: 50%; width: 6px; height: 2px; border-radius: 1px; background: rgba(255, 255, 255, 0.22); transition: width 0.45s var(--liquid), background 0.4s ease; }
+.dots button:hover::after { background: rgba(255, 255, 255, 0.5); width: 10px; }
+.dots button.going:not([aria-current='true'])::after { width: 12px; background: rgba(255, 255, 255, 0.55); }
+.dots button[aria-current='true']::after { width: 16px; background: #fff; box-shadow: 0 0 8px rgba(255, 255, 255, 0.6); }
+.dots button span { position: absolute; right: 28px; top: 50%; transform: translateY(-50%) translateX(6px); white-space: nowrap; font-size: 12px; color: rgba(255, 255, 255, 0.7); opacity: 0; pointer-events: none; transition: opacity 0.3s ease, transform 0.4s var(--liquid); }
+.dots button:hover span { opacity: 1; transform: translateY(-50%); }
+.hint { left: 50%; bottom: calc(18px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); display: flex; align-items: center; gap: 12px; font-size: 11.5px; letter-spacing: 0.24em; text-transform: uppercase; color: rgba(255, 255, 255, 0.32); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.hint i { position: relative; width: 1px; height: 22px; overflow: hidden; background: rgba(255, 255, 255, 0.1); }
+.hint i::after { content: ''; position: absolute; left: 0; top: -60%; width: 1px; height: 60%; background: rgba(255, 255, 255, 0.8); animation: trickle 1.8s var(--liquid) infinite; }
+@keyframes trickle { to { top: 110%; } }
+body.moving .hint { opacity: 0.35; }
+
+@media (max-width: 760px) {
+  .m-hide { display: none; }
+  .m-show { display: inline; }
+  .stage .cam { left: 0; right: 0; transform: none; -webkit-mask-image: linear-gradient(180deg, #000 70%, transparent); mask-image: linear-gradient(180deg, #000 70%, transparent); }
+  .stage video { top: 0; height: auto; aspect-ratio: 16 / 9; }
+  .stage .shade { background: linear-gradient(0deg, rgba(0, 0, 0, 0.92) 0%, rgba(0, 0, 0, 0.6) 40%, rgba(0, 0, 0, 0) 62%); }
+  .tabs { left: 0; max-width: 100%; }
+  .tab { height: 32px; padding: 0 12px; font-size: 12.5px; }
+  .corner .pill:not(.white) { padding: 0 12px; }
+  .copy { left: 6%; right: 6%; width: auto; bottom: 6%; gap: 10px; }
+  .copy h2, .plain h2 { font-size: 30px; }
+  .pane .said { top: 24%; }
+  .pane .bcard { top: 33%; }
+  .pane .bcard.land { top: calc(8px * var(--k)); }
+  .pane .mwin { left: 50%; top: 36%; }
+  .tiles { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px; }
+  .tiles div { padding: 12px; }
+  .tiles span { font-size: 12px; }
+  .plain { padding: 8% 6%; gap: 12px; }
+  .dots { display: none; }
+  .brand { display: none; }
+  .ticks { font-size: 13px; gap: 6px 14px; }
+}
+@media (max-width: 760px) and (max-height: 760px) { .tiles span { display: none; } }
+</style>
+</head>
+<body>
+<canvas id="fx" aria-hidden="true"></canvas>
+<button class="wake" id="wake" type="button" aria-label="Réveiller MIRYS"><span>Réveillez-moi</span></button>
+<div id="panes"></div>
+
+<div class="chrome brand" aria-hidden="true">MIRYS</div>
+<div class="chrome corner">
+  <a class="pill sm white" href="https://github.com/ShiroUNKW/nova-releases/releases/latest" target="_blank" rel="noopener"><svg viewBox="0 0 24 24"><path d="M12 3a1 1 0 0 1 1 1v9.6l3.3-3.3 1.4 1.4L12 17.4l-5.7-5.7 1.4-1.4 3.3 3.3V4a1 1 0 0 1 1-1zM5 19h14v2H5z"/></svg>Télécharger</a>
+  <a class="pill sm" href="https://mirys-assistant.lemonsqueezy.com/checkout/buy/56bf8125-d4c7-4918-94e4-fdbec6e81162?enabled=2302239" target="_blank" rel="noopener"><svg viewBox="0 0 24 24"><path d="M12 2a5 5 0 0 1 5 5v3h1a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h1V7a5 5 0 0 1 5-5zm0 2a3 3 0 0 0-3 3v3h6V7a3 3 0 0 0-3-3zm0 9.5a1.5 1.5 0 0 0-.8 2.77V18h1.6v-1.73A1.5 1.5 0 0 0 12 13.5z"/></svg><span class="m-hide">Obtenir une licence</span><span class="m-show">Licence</span></a>
+  <button class="round" id="mute" type="button" aria-label="Couper le son" aria-pressed="false"><svg viewBox="0 0 24 24"><path d="M4 9v6h4l5 4V5L8 9H4zm12.5 3a4.5 4.5 0 0 0-2.5-4v8a4.5 4.5 0 0 0 2.5-4z"/></svg></button>
+</div>
+<nav class="chrome dots" id="dots" aria-label="Catégories"></nav>
+<div class="chrome hint" id="hint"><span id="count">01 / 07</span><i></i><span>Faites défiler</span></div>
+
+<script>
+(() => {
+  'use strict';
+  // Lien de paiement Lemon Squeezy : à coller ici quand il est prêt (sinon « Prendre ma licence » mène au Discord)
+  const PAY_URL = 'https://mirys-assistant.lemonsqueezy.com/checkout/buy/56bf8125-d4c7-4918-94e4-fdbec6e81162?enabled=2302239';
+  const DL = 'https://github.com/ShiroUNKW/nova-releases/releases/latest';
+  const DISCORD = 'https://discord.gg/TTJYqadAh';
+  const BUY = PAY_URL || DISCORD;
+
+  const $ = (s, r = document) => r.querySelector(s);
+  const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const wait = (ms) => new Promise((r) => setTimeout(r, reduce ? Math.min(ms, 60) : ms));
+  const tw = async (tok, ms) => { await wait(ms); if (tok.dead) throw 'stop'; };
+  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+  const lerp = (a, b, t) => a + (b - a) * t;
+  const eio = (t) => (t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2);
+  const eout = (t) => 1 - (1 - t) ** 3;
+
+  // ---------- Son : les bruits de MIRYS, et le « plic » de la goutte (synthétisé) ----------
+  let muted = false, actx = null;
+  const sfx = {};
+  const play = (n, v = 0.35) => { if (muted || !document.body.classList.contains('awake')) return; try { const a = (sfx[n] = sfx[n] || new Audio(`sons/${n}.mp3`)); a.volume = v; a.currentTime = 0; a.play().catch(() => {}); } catch (e) {} };
+  function plic(gain = 0.22, f0 = 1500, f1 = 380) {
+    if (muted) return;
+    try {
+      actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+      const t = actx.currentTime, o = actx.createOscillator(), g = actx.createGain(), o2 = actx.createOscillator(), g2 = actx.createGain();
+      o.type = 'sine'; o.frequency.setValueAtTime(f0, t); o.frequency.exponentialRampToValueAtTime(f1, t + 0.09);
+      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(gain, t + 0.006); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.32);
+      o2.type = 'sine'; o2.frequency.setValueAtTime(f1 * 2.4, t + 0.02); o2.frequency.exponentialRampToValueAtTime(f1 * 1.6, t + 0.2);
+      g2.gain.setValueAtTime(0.0001, t + 0.02); g2.gain.exponentialRampToValueAtTime(gain * 0.25, t + 0.03); g2.gain.exponentialRampToValueAtTime(0.0001, t + 0.6);
+      o.connect(g).connect(actx.destination); o2.connect(g2).connect(actx.destination); o.start(t); o.stop(t + 0.4); o2.start(t); o2.stop(t + 0.7);
+    } catch (e) {}
+  }
+  function hum(on) { // le léger souffle de la lumière qui grandit
+    if (muted) return;
+    try {
+      actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+      const t = actx.currentTime, o = actx.createOscillator(), g = actx.createGain(), f = actx.createBiquadFilter();
+      o.type = 'triangle'; o.frequency.setValueAtTime(110, t); o.frequency.exponentialRampToValueAtTime(220, t + 1.8);
+      f.type = 'lowpass'; f.frequency.value = 900;
+      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.035, t + 1.2); g.gain.exponentialRampToValueAtTime(0.0001, t + 2.2);
+      o.connect(f).connect(g).connect(actx.destination); o.start(t); o.stop(t + 2.3);
+    } catch (e) {}
+  }
+
+  // =====================================================================
+  // Les catégories : chacune a ses onglets, un par fonctionnalité (la vraie MIRYS, filmée)
+  // =====================================================================
+  const I = {
+    down: '<svg viewBox="0 0 24 24"><path d="M12 3a1 1 0 0 1 1 1v9.6l3.3-3.3 1.4 1.4L12 17.4l-5.7-5.7 1.4-1.4 3.3 3.3V4a1 1 0 0 1 1-1zM5 19h14v2H5z"/></svg>',
+    chat: '<svg viewBox="0 0 24 24"><path d="M20 2H4a2 2 0 0 0-2 2v18l4-4h14a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2z"/></svg>',
+    play: '<svg viewBox="0 0 24 24"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.6-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5z"/></svg>',
+    euro: '<svg viewBox="0 0 24 24"><path d="M15 18.5A6.5 6.5 0 0 1 9.2 15H15l1-2H8.6a6.7 6.7 0 0 1 0-2H16l1-2H9.2A6.5 6.5 0 0 1 15 5.5c1.6 0 3.1.6 4.2 1.6L21 5.3A9 9 0 0 0 6.5 9H3l-1 2h4.1a9 9 0 0 0 0 2H3l-1 2h4.5A9 9 0 0 0 21 18.7l-1.8-1.8a6.5 6.5 0 0 1-4.2 1.6z"/></svg>',
+  };
+  const CH = [
+    { id: 'accueil', label: 'Accueil', tabs: [
+      { id: 'bonjour', label: 'Bonjour', when: '08:00', title: 'Bonjour.', text: 'Chaque matin, MIRYS vous accueille : la météo, vos tâches du jour, le mail qui compte. Puis elle se range en haut de l’écran.' },
+      { id: 'ile', label: 'L’île', when: '09:41', title: 'Votre assistante, en haut de l’écran.', text: 'Un clic et l’île s’ouvre : posez une question, tapez une demande, gardez un œil sur vos widgets. Un clic à côté, elle se replie.' },
+      { id: 'formes', label: 'Ses formes', when: '18:32', title: 'Elle prend la place qu’il faut.', text: 'L’île, un petit rond pendant vos parties, une simple goutte, ou plus rien d’une touche. Vos bulles arrivent toujours.' },
+    ] },
+    { id: 'organisation', label: 'Organisation', tabs: [
+      { id: 'rappels', label: 'Rappels', when: '09:12', title: 'Parlez-lui.', text: 'Maintenez une touche et dites ce dont vous avez besoin. À l’heure dite, MIRYS vous le rappelle. Aucune fenêtre à ouvrir.' },
+      { id: 'taches', label: 'Tâches', when: '09:30', title: 'Vos tâches, sous l’île.', text: '« Ajoute à mes tâches… » : la liste apparaît, la nouvelle tâche s’y ajoute. Un clic sur le rond, c’est fait. Épinglez-la pour la garder à l’écran.' },
+      { id: 'routines', label: 'Routines', when: '19:02', title: 'Un mot, et tout se lance.', text: 'Une routine ouvre vos applis et lance votre musique d’un seul mot. Et ce que vous lui confiez, MIRYS s’en souvient.' },
+    ] },
+    { id: 'messages', label: 'Messages & appels', tabs: [
+      { id: 'messages', label: 'Messages', when: '12:41', title: 'Répondez sans changer d’appli.', text: 'SMS, WhatsApp, Discord : les messages arrivent en haut de l’écran. Un clic, vous écrivez, Entrée, c’est envoyé.' },
+      { id: 'appels', label: 'Appels', when: '15:52', title: 'Décrochez sur l’île.', text: 'Un ami appelle sur Discord ? Acceptez d’un clic. Micro, sourdine, durée : l’appel reste sous vos yeux, sans quitter votre fenêtre.' },
+      { id: 'presence', label: 'Présence', when: '17:20', title: 'Elle guette pour vous.', text: '« Préviens-moi quand Léo se connecte » : MIRYS vous fait signe dès qu’il arrive sur Discord.' },
+    ] },
+    { id: 'mails', label: 'Mails', tabs: [
+      { id: 'mail-important', label: 'Mail important', when: '10:31', title: 'Le mail qui compte, au bon moment.', text: 'MIRYS repère les mails importants et vous le dit. « Détails du mail » : elle le résume. « Ouvrir le mail » : il s’affiche dans MIRYS Mail.' },
+      { id: 'mail-redige', label: 'Rédaction', when: '10:31', title: 'Elle écrit pour vous.', text: 'Dites en une phrase quoi répondre : MIRYS rédige dans le bon ton, vous relisez. Rien ne part sans votre clic sur Envoyer.' },
+      { id: 'codes', label: 'Codes', when: '11:12', title: 'Le code, sans le chercher.', text: 'Un code de connexion arrive par mail ou par SMS : MIRYS l’affiche et dit à quoi il sert. Copier, coller, connecté.' },
+    ] },
+    { id: 'jeu', label: 'En jeu', tabs: [
+      { id: 'gaming', label: 'Mode gaming', when: '16:03', title: 'En jeu, elle se fait discrète.', text: 'MIRYS reconnaît votre jeu et se range en petit rond. Vos messages passent sans vous gêner, et l’IA met sa mémoire en pause.' },
+      { id: 'live', label: 'Le Live', when: '20:14', title: 'Le Live.', text: 'Partie trouvée ? Acceptez depuis l’île, ou à la voix. Puis la sélection des champions s’affiche avec le temps qui reste. Aussi pour Valorant.' },
+      { id: 'clip', label: 'Clips', when: '21:07', title: 'Mirys, clip !', text: 'Les 30 dernières secondes de votre partie, gardées d’une phrase ou d’une touche. Vos clips restent sur votre PC.' },
+    ] },
+    { id: 'pc', label: 'Votre PC', tabs: [
+      { id: 'musique', label: 'Musique', when: '14:20', title: 'Votre musique, d’un geste.', text: 'Le morceau en cours se range dans un petit rond à côté de l’île. Un clic : la pochette, la lecture, la pause.' },
+      { id: 'fichiers', label: 'Fichiers', when: '11:40', title: 'Glissez, elle s’en occupe.', text: 'Déposez un fichier sur l’île : résumer, traduire, compresser, convertir. Le résultat est créé à côté, l’original ne bouge pas.' },
+      { id: 'comptes', label: 'Comptes', when: '09:02', title: 'Connecté, sans rien taper.', text: 'Vos identifiants, chiffrés par Windows, sont remplis quand une appli vous les demande. MIRYS vous demande d’abord quel compte utiliser.' },
+      { id: 'mixer', label: 'Volume', when: '14:05', title: 'Chaque son à sa place.', text: 'Le volume de chaque appli, réglé depuis l’île : baissez la musique, coupez le navigateur, sans ouvrir Windows.' },
+    ] },
+    { id: 'mirys', label: 'MIRYS', tabs: [
+      { id: 'tarif', label: 'Tarif', plain: 'price', title: 'Toutes les fonctions. Un seul prix.' },
+      { id: 'confiance', label: 'Confiance', plain: 'trust', title: 'Tout reste chez vous.', text: 'MIRYS travaille sur votre PC. Elle n’envoie rien sans votre « oui ».' },
+      { id: 'pub', label: 'La pub', plain: 'video', title: 'MIRYS en une minute.' },
+    ] },
+  ];
+
+  const words = (t, base = 0, step = 55) => t.split(' ').map((w, i) => `<span class="w rv" style="--d:${base + i * step}ms;--o:${i * 25}ms">${w}</span>`).join(' ');
+  const rv = (html, d, o = 0, tag = 'div', cls = '') => `<${tag} class="rv ${cls}" style="--d:${d}ms;--o:${o}ms">${html}</${tag}>`;
+
+  function plainHTML(t) {
+    if (t.plain === 'trust') return `<div class="plain"><h2>${words(t.title, 250)}</h2>${rv(t.text, 600, 40, 'p', 'lede')}<div class="tiles">${[['L’IA tourne sur votre PC', 'Sans compte chez un fournisseur, sans clé payante. Pause ou arrêt en un clic.'], ['Rien ne part sans vous', 'Aucun message, aucun mail ne part sans votre « envoie ».'], ['Mots de passe chiffrés', 'Chiffrés par Windows et jamais donnés à l’IA.'], ['Votre voix reste ici', 'Reconnaissance vocale et clips restent sur votre PC. Pour la météo, seule la ville est envoyée.']].map(([a, b], i) => rv(`<b>${a}</b><span>${b}</span>`, 800 + i * 110, 60 + i * 30)).join('')}</div></div>`;
+    if (t.plain === 'video') return `<div class="plain"><h2>${words(t.title, 250)}</h2>${rv(`<div class="vid"><video src="img/mirys-1min.mp4" poster="img/poster.jpg" preload="none" playsinline></video><button type="button" aria-label="Lire la vidéo"><span>${I.play}Regarder · 0:59</span></button></div>`, 700, 50, 'div', 'vidwrap')}</div>`;
+    return `<div class="plain">${rv('<span class="wordmark">MIRYS</span>', 200, 0)}<h2 style="font-size:clamp(22px,2.2vw,30px)">${words(t.title, 450, 45)}</h2>
+      ${rv('<div class="price"><b>4,99 €</b><span>par mois</span></div>', 750, 40)}
+      ${rv('<ul class="ticks"><li>Toutes les fonctionnalités</li><li>Mises à jour automatiques</li><li>Un PC à la fois</li><li>Sans engagement</li></ul>', 950, 60)}
+      ${rv(`<div class="ctas"><a class="pill white" href="${DL}" target="_blank" rel="noopener">${I.down}Télécharger MIRYS</a><a class="pill" href="${BUY}" target="_blank" rel="noopener">${I.euro}Prendre ma licence</a><a class="pill" href="${DISCORD}" target="_blank" rel="noopener">${I.chat}Bêta gratuite sur Discord</a></div>`, 1150, 80)}
+      ${rv('Windows 10 ou 11, 64 bits · ≈ 160 Mo · IA locale facultative (≈ 5 Go) · Paiement sécurisé par Lemon Squeezy, clé par e-mail.<br>Et ce n’est qu’un début : de nouvelles fonctionnalités arrivent en continu, guidées par vos idées.', 1350, 100, 'p', 'fine')}</div>`;
+  }
+  const copyHTML = (t, base = 0) => `${rv(`<i></i>${t.when}`, base + 120, 0, 'span', 'when')}<h2>${words(t.title, base + 220)}</h2>${rv(t.text, base + 520, 60, 'p')}`;
+  function bodyHTML(c, k) {
+    const t = c.tabs[k];
+    if (t.plain) return `<div class="board">${plainHTML(t)}</div>`;
+    return `<div class="stage"><div class="cam">${c.tabs.map((x) => (x.plain ? '' : `<video muted playsinline loop preload="none" data-v="${x.id}" poster="clips/${x.id}.jpg"></video>`)).join('')}</div><i class="shade"></i><i class="veil"></i></div><div class="copy">${copyHTML(t, 200)}</div>`;
+  }
+
+  // =====================================================================
+  // Les verres
+  // =====================================================================
+  const panesEl = $('#panes');
+  let W = innerWidth, H = innerHeight, PW = 0, PH = 0, PTOP = 0, SP = 0;
+  function layout() {
+    W = innerWidth; H = innerHeight;
+    const mob = W <= 760;
+    PW = Math.round(mob ? W - 24 : Math.min(W * 0.84, 1360));
+    PH = Math.round(mob ? H * 0.7 : Math.min(H * 0.74, PW * 0.6));
+    PTOP = Math.round(mob ? H * 0.2 : Math.max(104, (H - PH) * 0.62));
+    SP = Math.round(H * 1.7);
+    document.documentElement.style.setProperty('--pw', PW + 'px');
+    document.documentElement.style.setProperty('--ph', PH + 'px');
+  }
+  layout();
+
+  const panes = new Map(); // index -> { el, k (onglet), tok }
+  const tabOf = new Map(); // dernier onglet vu de chaque catégorie
+  function makePane(i) {
+    const c = CH[i];
+    const el = document.createElement('section'); el.className = 'pane'; el.dataset.i = i; el.setAttribute('aria-label', c.label);
+    const k = tabOf.get(i) || 0;
+    el.innerHTML = `<nav class="tabs" role="tablist" aria-label="${c.label}"><i class="tab-glow"></i>${c.tabs.map((t, j) => `<button type="button" class="tab" role="tab" aria-selected="${j === k}" style="--d:${j * 70}ms" data-k="${j}">${t.label}</button>`).join('')}</nav>
+      <div class="glass"><div class="body">${bodyHTML(c, k)}</div></div><i class="glint"></i><i class="sheen"></i><i class="ring"></i><i class="dim"></i>`;
+    panesEl.appendChild(el);
+    const p = { el, i, k, tok: { dead: true } };
+    $$('.tab', el).forEach((b) => b.addEventListener('click', () => selectTab(p, Number(b.dataset.k))));
+    wireBody(p);
+    panes.set(i, p); return p;
+  }
+  const getPane = (i) => panes.get(i) || makePane(i);
+  function wireBody(p) {
+    const v = $('.vid button', p.el);
+    if (v) v.addEventListener('click', () => { const vid = $('.vid video', p.el); vid.controls = true; v.hidden = true; vid.play().catch(() => {}); vid.focus({ preventScroll: true }); });
+  }
+  function glowTo(p) { // la pastille claire glisse sous l'onglet choisi
+    const b = $$('.tab', p.el)[p.k], g = $('.tab-glow', p.el); if (!b || !g) return;
+    g.style.width = `${b.offsetWidth}px`; g.style.transform = `translateX(${b.offsetLeft}px)`;
+    $('.tabs', p.el).style.setProperty('--tx', `${((b.offsetLeft + b.offsetWidth / 2) / Math.max(1, $('.tabs', p.el).scrollWidth)) * 100}%`);
+    $$('.tab', p.el).forEach((x, j) => x.setAttribute('aria-selected', j === p.k));
+  }
+  // WebM (VP9) quand le navigateur le lit, sinon MP4 (Safari)
+  const EXT = (() => { try { return document.createElement('video').canPlayType('video/webm; codecs="vp9"') ? 'webm' : 'mp4'; } catch (e) { return 'mp4'; } })();
+  // Où chercher la vidéo : dossier clips (WebM puis MP4), puis à la racine du site si le dossier n'a pas été envoyé
+  const tries = (id) => { const f = EXT === 'webm' ? ['webm', 'mp4'] : ['mp4', 'webm']; return [`clips/${id}.${f[0]}`, `clips/${id}.${f[1]}`, `${id}.${f[0]}`, `${id}.${f[1]}`]; };
+  function setSrc(v, n) {
+    const list = tries(v.dataset.v); if (n >= list.length) return;
+    v.dataset.try = n;
+    v.onerror = () => { const k = Number(v.dataset.try) + 1; setSrc(v, k); if (v.classList.contains('on')) v.play().catch(() => {}); };
+    v.src = list[n];
+  }
+  const videoOf = (p) => { const t = CH[p.i].tabs[p.k]; return t.plain ? null : $(`video[data-v="${t.id}"]`, p.el); };
+  function playVideo(p) {
+    const v = videoOf(p); if (!v) return;
+    $$('.stage video', p.el).forEach((x) => { if (x !== v) { x.classList.remove('on'); x.pause(); } });
+    v.muted = true; v.defaultMuted = true; v.playsInline = true;
+    if (!v.getAttribute('src')) setSrc(v, 0);
+    try { v.currentTime = 0; } catch (e) {}
+    v.classList.add('on'); v.play().catch(() => {});
+    // l'onglet suivant se prépare en silence
+    const nx = CH[p.i].tabs[p.k + 1]; if (nx && !nx.plain) { const n = $(`video[data-v="${nx.id}"]`, p.el); if (n && !n.getAttribute('src')) { n.preload = 'metadata'; n.muted = true; setSrc(n, 0); } }
+  }
+  function startDemo(p) { playVideo(p); }
+  function stopDemo(p) { if (p) $$('video', p.el).forEach((v) => v.pause()); }
+  function resetPane(p) { stopDemo(p); p.el.classList.remove('tabs-in', 'tabs-out', 'swap'); }
+  function tabsIn(p) { p.el.classList.remove('tabs-out'); p.el.classList.add('tabs-in'); requestAnimationFrame(() => glowTo(p)); }
+  function tabsOut(p, on = true) { if (!p) return; if (on) { if (p.el.classList.contains('tabs-in')) p.el.classList.add('tabs-out'); } else p.el.classList.remove('tabs-out'); }
+
+  // Changement d'onglet : l'obscurité passe sur le verre, un reflet le traverse, puis la nouvelle fonctionnalité apparaît
+  async function selectTab(p, k) {
+    if (k === p.k || p.swapping) { if (k !== p.k) p.queued = k; return; }
+    p.swapping = true; lastIn = performance.now();
+    const c = CH[p.i], from = c.tabs[p.k], to = c.tabs[k];
+    p.k = k; tabOf.set(p.i, k); glowTo(p); setHash(`${c.id}/${to.id}`);
+    p.el.classList.remove('swap'); void p.el.offsetWidth; p.el.classList.add('swap');
+    play('listen', 0.12);
+    const body = $('.body', p.el), veil = $('.veil', p.el), copy = $('.copy', p.el);
+    if (copy) copy.classList.add('out');
+    const gl = $('.glass', p.el);
+    // 1. le noir gagne (≈ 300 ms)
+    if (veil && !from.plain && !to.plain) {
+      await anim(reduce ? 1 : 300, (q) => { veil.style.opacity = String(eio(q) * 0.92); gl.style.filter = `brightness(${1 - 0.18 * eio(q)})`; });
+      stopDemo(p);
+      $$('.stage video', p.el).forEach((x) => x.classList.remove('on'));
+      copy.classList.remove('out'); copy.innerHTML = copyHTML(to, 0);
+      playVideo(p);
+      await wait(60);
+      // 2. il se retire, la nouvelle scène apparaît (≈ 420 ms)
+      await anim(reduce ? 1 : 460, (q) => { veil.style.opacity = String(0.92 * (1 - eout(q))); gl.style.filter = `brightness(${0.82 + 0.18 * eout(q)})`; });
+      veil.style.opacity = '0'; gl.style.filter = '';
+    } else {
+      // vers / depuis une page sans vidéo : le contenu entier se fond
+      await anim(reduce ? 1 : 300, (q) => { body.style.opacity = String(1 - eio(q)); body.style.filter = `blur(${8 * eio(q)}px)`; });
+      stopDemo(p);
+      body.innerHTML = bodyHTML(c, k); wireBody(p);
+      await wait(40);
+      await anim(reduce ? 1 : 420, (q) => { body.style.opacity = String(eout(q)); body.style.filter = `blur(${8 * (1 - eout(q))}px)`; });
+      body.style.opacity = ''; body.style.filter = '';
+      if (!to.plain) playVideo(p);
+    }
+    p.swapping = false;
+    if (p.queued != null) { const q = p.queued; p.queued = null; selectTab(p, q); }
+  }
+
+
+  // =====================================================================
+  // La lumière : voyant, goutte, éclaboussures, contour
+  // =====================================================================
+  const cv = $('#fx'), ctx = cv.getContext('2d');
+  let dpr = Math.min(2, devicePixelRatio || 1);
+  function size() { dpr = Math.min(2, devicePixelRatio || 1); cv.width = Math.round(innerWidth * dpr); cv.height = Math.round(innerHeight * dpr); }
+  size();
+  const LED = () => ({ x: W / 2, y: Math.round(H * 0.4) });
+  document.documentElement.style.setProperty('--ledy', LED().y + 'px');
+
+  // Monde : le voyant est au-dessus du verre n°0 ; la caméra descend de verre en verre
+  let camY = -SP; // vue du voyant
+  const paneTop = (i) => i * SP + PTOP;
+  function place(p) { p.el.style.transform = `translate3d(0, ${paneTop(p.i) - camY}px, 0)`; }
+
+  // Poussière : quelques grains presque invisibles qui défilent quand on suit la goutte
+  const dust = Array.from({ length: 70 }, () => ({ x: Math.random(), y: Math.random() * 30 - 2, r: Math.random() * 1.1 + 0.3, a: Math.random() * 0.08 + 0.02, z: Math.random() * 0.6 + 0.4 }));
+
+  // Contour d'un rectangle arrondi, paramétré par la longueur (0 = milieu du haut, sens horaire)
+  function perim(x, y, w, h, r) {
+    const segs = [], add = (len, fn) => segs.push({ len, fn });
+    add(w / 2 - r, (t) => [x + w / 2 + t, y]);
+    add((Math.PI * r) / 2, (t) => { const a = -Math.PI / 2 + t / r; return [x + w - r + Math.cos(a) * r, y + r + Math.sin(a) * r]; });
+    add(h - 2 * r, (t) => [x + w, y + r + t]);
+    add((Math.PI * r) / 2, (t) => { const a = t / r; return [x + w - r + Math.cos(a) * r, y + h - r + Math.sin(a) * r]; });
+    add(w - 2 * r, (t) => [x + w - r - t, y + h]);
+    add((Math.PI * r) / 2, (t) => { const a = Math.PI / 2 + t / r; return [x + r + Math.cos(a) * r, y + h - r + Math.sin(a) * r]; });
+    add(h - 2 * r, (t) => [x, y + h - r - t]);
+    add((Math.PI * r) / 2, (t) => { const a = Math.PI + t / r; return [x + r + Math.cos(a) * r, y + r + Math.sin(a) * r]; });
+    add(w / 2 - r, (t) => [x + r + t, y]);
+    const P = segs.reduce((s, g) => s + g.len, 0);
+    const at = (s) => { s = ((s % P) + P) % P; for (const g of segs) { if (s <= g.len) return g.fn(s); s -= g.len; } return [x + w / 2, y]; };
+    return { P, at };
+  }
+  function rimPath(pm, s0, s1) {
+    ctx.beginPath(); const n = Math.max(2, Math.ceil(Math.abs(s1 - s0) / 5));
+    for (let k = 0; k <= n; k++) { const [px, py] = pm.at(lerp(s0, s1, k / n)); k ? ctx.lineTo(px * dpr, py * dpr) : ctx.moveTo(px * dpr, py * dpr); }
+  }
+  function drawRim(pm, ranges, alpha) {
+    ctx.save(); ctx.lineCap = 'round'; ctx.globalCompositeOperation = 'lighter';
+    for (const [a, b] of ranges) {
+      if (b - a < 0.5) continue;
+      rimPath(pm, a, b);
+      ctx.filter = `blur(${4 * dpr}px)`; ctx.strokeStyle = `rgba(255,255,255,${0.16 * alpha})`; ctx.lineWidth = 6 * dpr; ctx.stroke();
+      ctx.filter = 'none'; ctx.strokeStyle = `rgba(255,255,255,${0.42 * alpha})`; ctx.lineWidth = 1.3 * dpr; ctx.stroke();
+    }
+    ctx.restore();
+  }
+  function glow(x, y, r, a, col = '255,255,255') {
+    const g = ctx.createRadialGradient(x * dpr, y * dpr, 0, x * dpr, y * dpr, r * dpr);
+    g.addColorStop(0, `rgba(${col},${a})`); g.addColorStop(0.25, `rgba(${col},${a * 0.45})`); g.addColorStop(1, `rgba(${col},0)`);
+    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x * dpr, y * dpr, r * dpr, 0, Math.PI * 2); ctx.fill();
+  }
+  function head(x, y, a = 1) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; glow(x, y, 90, 0.5 * a); glow(x, y, 18, 0.9 * a); ctx.restore(); }
+  // ---------- La goutte : une seule forme blanche, dessinée hors écran puis floutée en plusieurs couches ----------
+  // Tout ce qui appartient à la goutte (la lumière du bord qui se rassemble, le col, la perle) est dessiné dans la même
+  // image avant d'être flouté : aucune superposition visible.
+  const off = document.createElement('canvas'), octx = off.getContext('2d');
+  // Flou compatible téléphones : Safari (iPhone) ignore ctx.filter ; on passe alors par une ombre floutée, décalée hors champ
+  const FILTER_OK = (() => { try { const t = document.createElement('canvas'); t.width = t.height = 9; const c = t.getContext('2d'); c.filter = 'blur(2px)'; c.fillStyle = '#fff'; c.fillRect(4, 4, 1, 1); return c.getImageData(1, 4, 1, 1).data[3] > 0; } catch (e) { return false; } })();
+  const OFFS = 60000;
+  function blurImg(img, dx, dy, b) {
+    if (FILTER_OK) { ctx.filter = `blur(${b}px)`; ctx.drawImage(img, dx, dy); ctx.filter = 'none'; return; }
+    ctx.save(); ctx.shadowColor = '#fff'; ctx.shadowBlur = b * 2; ctx.shadowOffsetX = OFFS; ctx.drawImage(img, dx - OFFS, dy); ctx.restore();
+  }
+  function blurStroke(path, b) {
+    if (FILTER_OK || b < 0.8) { ctx.filter = b >= 0.8 ? `blur(${b}px)` : 'none'; ctx.stroke(path); ctx.filter = 'none'; return; }
+    ctx.save(); ctx.shadowColor = '#fff'; ctx.shadowBlur = b * 2; ctx.shadowOffsetX = OFFS; ctx.translate(-OFFS, 0); ctx.stroke(path); ctx.restore();
+  }
+  const smooth = (e0, e1, x) => { const t = clamp((x - e0) / (e1 - e0), 0, 1); return t * t * (3 - 2 * t); };
+  function dropDraw(cx, cy, build, soft = 3.2, a = 1, ow = 360, oh = 360) {
+    ow += 200; oh += 200; const SW = Math.round(ow * dpr), SH = Math.round(oh * dpr); if (off.width !== SW || off.height !== SH) { off.width = SW; off.height = SH; }
+    octx.setTransform(1, 0, 0, 1, 0, 0); octx.clearRect(0, 0, SW, SH);
+    octx.setTransform(dpr, 0, 0, dpr, (ow / 2 - cx) * dpr, (oh / 2 - cy) * dpr);
+    octx.globalCompositeOperation = 'source-over'; octx.fillStyle = '#fff'; build(octx);
+    const dx = (cx - ow / 2) * dpr, dy = (cy - oh / 2) * dpr;
+    ctx.save(); ctx.globalCompositeOperation = 'lighter';
+    ctx.globalAlpha = 0.26 * a; blurImg(off, dx, dy, 70 * dpr); // la grande lueur
+    ctx.globalAlpha = 0.4 * a; blurImg(off, dx, dy, 30 * dpr); // la lueur proche
+    // un vrai flou jusque dans le cœur : aucun bord net, la goutte est faite de lumière
+    const b1 = Math.max(7, soft * 1.8), b2 = 3; // flou de 3 px sur la goutte et la canalisation
+    ctx.globalAlpha = 0.7 * a; blurImg(off, dx, dy, b1 * dpr);
+    ctx.globalAlpha = 1 * a; blurImg(off, dx, dy, b2 * dpr);
+    ctx.globalAlpha = 0.55 * a; blurImg(off, dx, dy, b2 * dpr);
+    ctx.restore();
+  }
+  // Goutte qui se forme au bord (dir 1 : sous le bord ; -1 : au-dessus). pw : largeur de la lumière encore étalée sur le bord.
+  function hanging(sx, sy, d, r, neck, srcw, a = 1, dir = 1, soft = 3.2, pw = 0, pa = 1) {
+    const cy = sy + d * dir, ow = Math.max(360, pw + 160);
+    dropDraw(sx, sy + d * dir * 0.5, (c) => {
+      if (pw > 0) { // la lumière du bord qui se rassemble vers le centre
+        const g = c.createLinearGradient(sx - pw / 2, 0, sx + pw / 2, 0);
+        g.addColorStop(0, 'rgba(255,255,255,0)'); g.addColorStop(0.15, `rgba(255,255,255,${0.35 * pa})`); g.addColorStop(0.5, `rgba(255,255,255,${pa})`); g.addColorStop(0.85, `rgba(255,255,255,${0.35 * pa})`); g.addColorStop(1, 'rgba(255,255,255,0)');
+        c.fillStyle = g; c.beginPath(); c.ellipse(sx, sy, pw / 2, 6 + 4 * (1 - clamp(pw / 700, 0, 1)), 0, 0, Math.PI * 2); c.fill(); c.fillStyle = '#fff';
+      }
+      if (r > 0.3) {
+        c.beginPath(); c.moveTo(sx - srcw, sy);
+        c.bezierCurveTo(sx - srcw * 0.4, sy + d * 0.15 * dir, sx - neck, cy - r * 1.3 * dir, sx - r, cy);
+        c.arc(sx, cy, r, Math.PI, 0, dir > 0);
+        c.bezierCurveTo(sx + neck, cy - r * 1.3 * dir, sx + srcw * 0.4, sy + d * 0.15 * dir, sx + srcw, sy);
+        c.closePath(); c.fill();
+      }
+    }, soft, a, ow);
+  }
+  // Goutte qui tombe : en se détachant elle s'écrase un peu à l'horizontale (la tension du bord la relâche),
+  // puis la vitesse l'étire à la verticale
+  function falling(x, y, r, v, a = 1, t = 1) {
+    const hz = 0.62 * (1 - Math.exp(-80 * t)) * Math.exp(-5 * t) * Math.cos(t * 10); // nettement écrasée au détachement   // > 0 : élargie ; < 0 : allongée (rebond qui s'amortit)
+    const st = Math.min(0.34, v / 4200) * (1 - Math.exp(-5 * t)); // étirement vertical dû à la vitesse
+    const rx = r * (1 + hz - st * 0.45), ry = r * (1 - hz * 0.8 + st);
+    dropDraw(x, y, (c) => { c.beginPath(); c.ellipse(x, y, rx, ry, 0, 0, Math.PI * 2); c.fill(); }, 3, a);
+  }
+  function remnant(sx, sy, t, dir = 1) { const k = clamp(t / 0.32, 0, 1); if (k < 1) hanging(sx, sy, 7 * (1 - k), 2.6 * (1 - k) + 0.4, 1.2, 7, 1 - k, dir, 3.5); }
+  function bead(x, y, rx, ry, a = 1) { dropDraw(x, y, (c) => { c.beginPath(); c.ellipse(x, y, rx, ry, 0, 0, Math.PI * 2); c.fill(); }, 3, a); }
+
+  // ---------- Particules d'éclaboussure ----------
+  let sparks = [];
+  const SPLASH = false; // true : la goutte éclabousse ; false : sa lumière est entièrement absorbée par le verre
+  function splash(x, y, dir = 1) {
+    for (let k = 0; k < 34; k++) {
+      const ang = -Math.PI / 2 * dir + (Math.random() - 0.5) * Math.PI * 0.95, sp = 120 + Math.random() * 420;
+      sparks.push({ x, y: y + camY, vx: Math.cos(ang) * sp * (0.6 + Math.random()), vy: Math.sin(ang) * sp, r: 0.6 + Math.random() * 1.9, life: 0.5 + Math.random() * 0.7, t: 0 });
+    }
+  }
+  function drawSparks(dt) {
+    ctx.save(); ctx.globalCompositeOperation = 'lighter';
+    sparks = sparks.filter((s) => (s.t += dt) < s.life);
+    for (const s of sparks) {
+      s.vy += 900 * dt; s.x += s.vx * dt; s.y += s.vy * dt; s.vx *= 0.985;
+      const a = (1 - s.t / s.life) ** 1.4;
+      const sy = s.y - camY; glow(s.x, sy, s.r * 6, 0.35 * a); ctx.fillStyle = `rgba(255,255,255,${0.9 * a})`; ctx.beginPath(); ctx.arc(s.x * dpr, sy * dpr, s.r * dpr, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  // ---------- Le moteur : une scène = une fonction de dessin par image ----------
+  let draw = null, last = 0, running = false, scrub = null;
+  function loop(now) {
+    const dt = Math.min(0.05, (now - last) / 1000 || 0.016); last = now;
+    ctx.clearRect(0, 0, cv.width, cv.height);
+    // poussière (seulement quand la caméra bouge un peu)
+    if (moving) { ctx.save(); for (const d of dust) { const yy = ((d.y * H - camY * d.z) % (H * 1.2) + H * 1.2) % (H * 1.2) - H * 0.1; ctx.fillStyle = `rgba(255,255,255,${d.a * moving})`; ctx.beginPath(); ctx.arc(d.x * W * dpr, yy * dpr, d.r * dpr, 0, Math.PI * 2); ctx.fill(); } ctx.restore(); }
+    let keep = false;
+    if (draw) keep = draw(now / 1000, dt) !== false;
+    if (sparks.length) { drawSparks(dt); keep = true; }
+    if (scrub) scrub(dt);
+    if (keep || moving || busy || B.classList.contains('awake')) requestAnimationFrame(loop); else { running = false; ctx.clearRect(0, 0, cv.width, cv.height); }
+  }
+  function kick() { if (!running) { running = true; last = performance.now(); requestAnimationFrame(loop); } }
+  let moving = 0;
+
+  // ---------- Veille : le voyant blanc, lointain, qui respire ----------
+  const B = document.body;
+  const LED0 = [226, 234, 255]; let ledColor = LED0.slice(), ledPow = 0; // veille : un blanc froid et lointain, comme Nova
+  draw = (t) => {
+    const { x, y } = LED(); const b = 0.5 + 0.5 * Math.sin(t * 1.9); // respiration lente
+    ctx.save(); ctx.globalCompositeOperation = 'lighter';
+    glow(x, y, 120, 0.04 + 0.07 * b, ledColor.join(',')); glow(x, y, 26, 0.22 + 0.32 * b, ledColor.join(',')); glow(x, y, 4, 0.8, '240,244,255');
+    ctx.restore();
+  };
+  kick();
+
+  // =====================================================================
+  // Les transitions
+  // =====================================================================
+  let cur = -1, busy = false;
+  const camTo = (i) => i * SP;
+  function anim(ms, fn, tok) { return new Promise((res) => { const t0 = performance.now(); const step = (now) => { if (tok && tok.dead) return res(); const p = clamp((now - t0) / (reduce ? 1 : ms), 0, 1); fn(p); if (p < 1) requestAnimationFrame(step); else res(); }; requestAnimationFrame(step); }); }
+  // Le verre se dévoile en fondu, du haut vers le bas (ou l'inverse)
+  function setReveal(p, f, fromTop = true) {
+    const g = $('.glass', p.el);
+    if (f >= 1) { g.style.removeProperty('--reveal'); return; }
+    const e = f * 170;
+    g.style.setProperty('--reveal', `linear-gradient(${fromTop ? 180 : 0}deg, #000 ${e - 70}%, rgba(0,0,0,0.78) ${e - 46}%, rgba(0,0,0,0.48) ${e - 26}%, rgba(0,0,0,0.18) ${e - 10}%, transparent ${e}%)`);
+  }
+  // Le noir gagne en douceur, par paliers
+  function setDim(p, prog, down = true) {
+    const d = $('.dim', p.el), e = prog * 190 - 14;
+    d.style.setProperty('--dim', prog <= 0 ? 'transparent' : `linear-gradient(${down ? 180 : 0}deg, #000 ${e - 86}%, rgba(0,0,0,0.85) ${e - 62}%, rgba(0,0,0,0.6) ${e - 40}%, rgba(0,0,0,0.3) ${e - 20}%, rgba(0,0,0,0.1) ${e - 6}%, rgba(0,0,0,0) ${e + 6}%)`);
+  }
+  // Rectangle réel du verre à l'écran (il suit aussi la souris)
+  const rectOf = (i) => { const p = panes.get(i); if (p) { const r = p.el.getBoundingClientRect(); return { x: r.left, y: r.top, w: r.width, h: r.height, r: 34 }; } return { x: (W - PW) / 2, y: paneTop(i) - camY, w: PW, h: PH, r: 34 }; };
+  // La bordure en lumière, en fondu vertical : 'in' = allumée au-dessus du front, 'out' = allumée en dessous
+  function rimFade(R, f, mode, a = 1, fromTop = true, bk = 0) { // bk : 0 = bord net, 1 = bord entièrement flouté
+    if (a <= 0.003) return;
+    const y0 = R.y * dpr, y1 = (R.y + R.h) * dpr, band = 0.34;
+    const grad = (base, peak) => {
+      const g = fromTop ? ctx.createLinearGradient(0, y0, 0, y1) : ctx.createLinearGradient(0, y1, 0, y0);
+      const c = (v) => clamp(v, 0, 1), A = (x) => `rgba(255,255,255,${x})`;
+      if (mode === 'in') { g.addColorStop(0, A(base)); g.addColorStop(c(f - band), A(base)); g.addColorStop(c(f - band * 0.35), A(peak)); g.addColorStop(c(f), A(0)); g.addColorStop(1, A(0)); }
+      else { g.addColorStop(0, A(0)); g.addColorStop(c(f), A(0)); g.addColorStop(c(f + band * 0.35), A(peak)); g.addColorStop(c(f + band), A(base)); g.addColorStop(1, A(base)); }
+      return g;
+    };
+    ctx.save(); ctx.globalCompositeOperation = 'lighter'; const P = new Path2D();
+    const x = R.x * dpr, y = R.y * dpr, w = R.w * dpr, h = R.h * dpr, r = R.r * dpr;
+    P.moveTo(x + r, y); P.arcTo(x + w, y, x + w, y + h, r); P.arcTo(x + w, y + h, x, y + h, r); P.arcTo(x, y + h, x, y, r); P.arcTo(x, y, x + w, y, r); P.closePath();
+    // la bordure du verre reste nette : seule la lumière qui se canalise en bas et la goutte sont floues
+    ctx.strokeStyle = grad(0.06 * a, 0.2 * a); ctx.lineWidth = 6 * dpr; blurStroke(P, 4 * dpr);
+    ctx.strokeStyle = grad(0.34 * a, 0.75 * a); ctx.lineWidth = 1.3 * dpr; blurStroke(P, 0);
+    ctx.restore();
+  }
+  function flareAt(x, y, k, a) { // éclat horizontal sur le bord
+    if (a <= 0) return;
+    ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.translate(x * dpr, y * dpr); ctx.scale(1 + k * 10, 1);
+    const g = ctx.createRadialGradient(0, 0, 0, 0, 0, 42 * dpr); g.addColorStop(0, `rgba(255,255,255,${0.55 * a})`); g.addColorStop(0.35, `rgba(255,255,255,${0.18 * a})`); g.addColorStop(1, 'rgba(255,255,255,0)');
+    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(0, 0, 42 * dpr, 0, Math.PI * 2); ctx.fill(); ctx.restore();
+  }
+
+  // L'arrivée : éclaboussure, la bordure s'allume en fondu du haut vers le bas, le verre se dévoile, puis se pose
+  let revealTok = { dead: true };
+  async function reveal(i, fromTop = true) {
+    const rt = (revealTok = { dead: false });
+    const p = getPane(i); resetPane(p); p.el.classList.remove('idle', 'shown', 'leaving'); const gl0 = $('.glass', p.el); gl0.style.transform = ''; gl0.style.filter = ''; $('.ring', p.el).style.opacity = '';
+    setDim(p, 0); setReveal(p, 0, fromTop); p.el.classList.add('live'); place(p);
+    const c0 = camY, c1 = camTo(i);
+    let R = rectOf(i);
+    if (SPLASH) splash(R.x + R.w / 2, fromTop ? R.y : R.y + R.h, fromTop ? 1 : -1); // atterrissage silencieux
+    setTimeout(() => { if (cur !== i) return; p.el.classList.add('shown'); setTimeout(() => { if (cur === i && !p.el.classList.contains('leaving')) startDemo(p); }, 500); }, 550);
+    kick();
+    await anim(2300, (q) => {
+      camY = lerp(c0, c1, eio(clamp(q / 0.62, 0, 1))); place(p); R = rectOf(i);
+      const f = eout(clamp(q / 0.85, 0, 1)) * 1.1, fl = SPLASH ? clamp(q * 2, 0, 1) : eout(clamp(q / 0.2, 0, 1));
+      const sp = eout(clamp(q / 0.16, 0, 1)), spA = 1 - smooth(0.12, 0.42, q); // la lumière file le long du bord (~370 ms)
+      const ab = clamp(q / 0.085, 0, 1); // la goutte est bue par le bord du verre (~200 ms)
+      draw = () => {
+        rimFade(R, f, 'in', 1, fromTop); const ex = R.x + R.w / 2, ey = fromTop ? R.y : R.y + R.h;
+        flareAt(ex, ey, fl, (1 - fl) * (SPLASH ? 1 : 1.25));
+        if (!SPLASH && spA > 0) { // la lumière absorbée se diffuse vite vers les deux coins
+          const hw = (R.w / 2 - 20) * sp, g = ctx.createLinearGradient((ex - hw) * dpr, 0, (ex + hw) * dpr, 0);
+          g.addColorStop(0, 'rgba(255,255,255,0)'); g.addColorStop(0.2, `rgba(255,255,255,${0.5 * spA})`); g.addColorStop(0.5, `rgba(255,255,255,${0.95 * spA})`); g.addColorStop(0.8, `rgba(255,255,255,${0.5 * spA})`); g.addColorStop(1, 'rgba(255,255,255,0)');
+          const L = new Path2D(); L.moveTo((ex - hw) * dpr, ey * dpr); L.lineTo((ex + hw) * dpr, ey * dpr);
+          ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.strokeStyle = g; ctx.lineCap = 'round';
+          ctx.lineWidth = 8 * dpr; ctx.globalAlpha = 0.35; blurStroke(L, 6 * dpr); ctx.globalAlpha = 1; ctx.lineWidth = 1.6 * dpr; blurStroke(L, 0); ctx.restore();
+        }
+        if (!SPLASH && ab < 1) { // elle s'enfonce dans le bord en s'aplatissant, sa lumière passe dans la bordure
+          const k = eout(ab), rx = 10 * (1 + 0.9 * k), ry = 10 * (1 - k) + 0.6, cy = ey - (fromTop ? 1 : -1) * ry * 0.35;
+          dropDraw(ex, cy, (c) => { c.beginPath(); c.ellipse(ex, cy, rx, ry, 0, 0, Math.PI * 2); c.fill(); }, 3, 1 - k * k);
+        }
+      };
+      setReveal(p, eio(clamp((q - 0.04) / 0.92, 0, 1)), fromTop);
+    }, rt);
+    if (rt.dead) { camY = c1; place(p); return p; } // une autre catégorie a été choisie : on repart tout de suite
+    camY = c1; place(p); setReveal(p, 1);
+    p.el.classList.add('idle');
+    setTimeout(() => { if (cur === i && !rt.dead && !p.el.classList.contains('leaving')) tabsIn(p); }, 380); // les onglets arrivent en dernier
+    await anim(800, (q) => { R = rectOf(i); draw = () => rimFade(R, 1.2, 'in', 1 - q, fromTop); }, rt);
+    if (!rt.dead) draw = null;
+    return p;
+  }
+
+  // ---------- Le départ, piloté par la molette ----------
+  // pull : 0 = au repos ; vers 1 la présentation s'éteint et la goutte se forme ; à 1 elle tombe. Négatif = vers le haut.
+  let pull = 0, pullT = 0, lastIn = 0, jump = null;
+  const NEED = 1;
+  function applyPull(p, v) {
+    const a = Math.abs(v), down = v >= 0, sgn = down ? 1 : -1;
+    const P = getPane(cur), gl = $('.glass', P.el), ring = $('.ring', P.el);
+    const dim = smooth(0, 0.82, a);
+    setDim(P, dim, down);
+    gl.style.transform = a ? `translateY(${sgn * 50 * dim}px) scale(${1 - 0.02 * dim})` : ''; gl.style.filter = a ? `blur(${6 * dim}px)` : '';
+    ring.style.opacity = a ? String(1 - smooth(0, 0.3, a)) : '';
+    tabsOut(P, a > 0.03);
+    P.el.classList.toggle('leaving', a > 0.16); if (a < 0.08 && !P.el.classList.contains('shown')) P.el.classList.add('shown');
+    if (a > 0.16) P.el.classList.remove('shown');
+    // la caméra accompagne la lumière quand la goutte se forme
+    const R0 = { x: (W - PW) / 2, y: paneTop(cur) - camTo(cur), w: PW, h: PH };
+    const edgeY = down ? R0.y + R0.h : R0.y, aim = down ? H * 0.42 : H * 0.58;
+    camY = camTo(cur) + (edgeY - aim) * smooth(0.55, 1, a); place(P);
+    const R = rectOf(cur), sx = R.x + R.w / 2, sy = down ? R.y + R.h : R.y;
+    const bk = smooth(0.08, 0.6, a);                                      // la bordure se floute dès que la lumière se canalise
+    const f = smooth(0, 0.9, a) * 0.8;                                    // le front s'arrête avant le bas : la bordure reste un peu visible
+    const lg = smooth(0.34, 0.9, a), s = smooth(0.52, 1, a);              // la lumière se rassemble, puis la goutte grossit
+    const ra = 1 - 0.62 * smooth(0.34, 0.85, a);                          // elle s'atténue, mais ne s'éteint qu'au départ de la goutte
+    const pw = (R.w - 30) * (1 - 0.18 * lg), pa = 0.12 + 0.38 * lg;
+    const r = 1 + 8 * s, d = r * (0.3 + 2 * s), neck = r * (1 - 0.7 * s), soft = 9 - 4.4 * s;
+    moving = 0.3 * smooth(0.6, 1, a) * (1 - smooth(0.95, 1, a));
+    draw = a < 0.004 ? null : () => {
+      rimFade(R, f, 'out', ra, down, bk);
+      if (a > 0.34) hanging(sx, sy, d, r, neck, 14 + 14 * (1 - s), smooth(0.34, 0.6, a), sgn, soft, pw, pa);
+    };
+    return { sx, sy, d, r, f, ra, pw, pa, soft, neck, bk };
+  }
+  scrub = (dt) => {
+    if (busy || cur < 0) return;
+    const idle = performance.now() - lastIn > 2600;
+    if (idle && jump == null) pullT *= 0.965; // sans action, la goutte se résorbe doucement
+    // pas de suivant (ou de précédent) : on peut tirer un peu, puis ça résiste
+    if (pullT > 0 && cur >= CH.length - 1) pullT = Math.min(pullT, 0.32);
+    if (pullT < 0 && cur <= 0) pullT = Math.max(pullT, -0.32);
+    pull += (pullT - pull) * Math.min(1, dt * 7);
+    if (Math.abs(pull - pullT) < 0.0005) pull = pullT;
+    const g = applyPull(null, pull);
+    if (pull >= NEED * 0.995 && cur < CH.length - 1) drop(1, g);
+    else if (pull <= -NEED * 0.995 && cur > 0) drop(-1, g);
+  };
+  let phase = null, want = null; // phase : 'goutte' | 'chute' | 'arrivee' ; want : la catégorie demandée en dernier
+  async function drop(dir, g) {
+    busy = true; phase = 'goutte'; const from = cur; let tgt = jump != null ? jump : from + dir; jump = null;
+    pull = pullT = 0; stopDemo(getPane(from));
+    const pf = getPane(from); let pt = getPane(tgt);
+    const sgn = dir > 0 ? 1 : -1, r0 = g.r, d0 = g.d;
+    await anim(reduce ? 1 : 480, (k) => {
+      const e = eio(k), pw = lerp(g.pw, 10, e), pa = lerp(g.pa, 1, e) * (1 - smooth(0.75, 1, k));
+      g.r = lerp(r0, 10, e); g.d = lerp(d0, 10 * 2.6, e);
+      const neck = lerp(g.neck, g.r * 0.16, e), Rf = rectOf(from);
+      draw = () => { rimFade(Rf, g.f, 'out', g.ra * (1 - 0.45 * e), dir > 0, 1); hanging(g.sx, g.sy, g.d, g.r, neck, lerp(14, 8, e), 1, sgn, lerp(g.soft, 4.2, e), pw, pa); };
+    });
+    g.ra *= 0.55;
+    phase = 'chute';
+    const prep = (q) => { pq = q; q.el.classList.add('live'); setReveal(q, 0, tgt > from); setDim(q, 0); };
+    let pq = null; prep(pt);
+    // Une autre catégorie choisie pendant la chute : la goutte change de destination, sans s'arrêter
+    const endFn = () => {
+      if (jump != null && jump !== tgt && jump !== from && jump >= 0 && jump < CH.length) {
+        if (pt !== pf) { pt.el.classList.remove('live'); setReveal(pt, 1); }
+        tgt = jump; pt = getPane(tgt); prep(pt);
+      }
+      return tgt > from ? paneTop(tgt) : paneTop(tgt) + PH;
+    };
+    const srcWorld = g.sy + camY, sWorld = g.sy + sgn * g.d + camY;
+    await follow(g.sx, sWorld, endFn, g.sy + sgn * g.d, { place: () => { place(pf); place(pt); }, draw: (q) => { rimFade(rectOf(from), g.f, 'out', g.ra * (1 - smooth(0, 0.22, q)), dir > 0, 1); remnant(g.sx, srcWorld - camY, q * 1.4, sgn); approach(tgt, H * 0.5, tgt > from ? 1 : -1); } }, dir);
+    pf.el.classList.remove('live', 'leaving'); setDim(pf, 0); $('.glass', pf.el).style.transform = ''; $('.glass', pf.el).style.filter = ''; resetPane(pf);
+    if (jump === tgt) jump = null;
+    cur = tgt; ui(); setHash(CH[cur].id + (tabOf.get(cur) ? `/${CH[cur].tabs[tabOf.get(cur)].id}` : ''));
+    phase = 'arrivee';
+    await reveal(tgt, tgt > from);
+    settle();
+  }
+  // Fin d'une arrivée : si une autre catégorie a été demandée entre-temps, on y va tout de suite
+  function settle() {
+    busy = false; phase = null; lastIn = 0;
+    const w = want; want = null;
+    if (w != null && w !== cur) autoTo(w);
+  }
+
+  // La goutte tombe (ou remonte) et la caméra la suit : elle reste au milieu, le verre suivant vient à sa rencontre.
+  // eWorld peut changer en route (fonction) : la goutte repart alors d'où elle est vers la nouvelle destination.
+  async function follow(sx, sWorld, eWorld, sy0, extra, dir = 1) {
+    const endOf = typeof eWorld === 'function' ? eWorld : () => eWorld;
+    const dur = (d) => clamp(Math.sqrt(Math.max(1, Math.abs(d)) / H) * 1350, 1000, 2000);
+    const FOLLOW = H * 0.5;
+    B.classList.add('moving');
+    let start = sWorld, end = endOf(), T = dur(end - start), t0 = performance.now(), prevY = sWorld, syStart = sy0, syNow = sy0, wy = sWorld, again = false, down = dir > 0;
+    await new Promise((res) => {
+      const step = (now) => {
+        const e2 = endOf();
+        if (e2 !== end) { start = wy; end = e2; T = dur(end - start) * 0.85; t0 = now; syStart = syNow; again = true; down = end > start; }
+        const q = clamp((now - t0) / (reduce ? 1 : T), 0, 1);
+        const k = again ? eio(q) : down ? q * q : eio(q);
+        wy = lerp(start, end, k); const v = Math.abs(wy - prevY) / 0.016; prevY = wy;
+        syNow = lerp(syStart, FOLLOW, eio(clamp(q / 0.6, 0, 1)));
+        camY = wy - syNow; moving = Math.sin(Math.PI * Math.min(1, q * 1.2)) * 0.9;
+        extra.place();
+        const qq = q;
+        draw = () => { extra.draw(qq); if (down) falling(sx, syNow, 10, v, 1, qq * T / 1000); else bead(sx, syNow, 8, 8.6, 0.9); };
+        if (q < 1) requestAnimationFrame(step); else res();
+      };
+      requestAnimationFrame(step);
+    });
+    moving = 0; B.classList.remove('moving');
+  }
+  function approach(to, y, dir = 1) { // le bord du verre qui arrive capte déjà la lumière de la goutte
+    const R = rectOf(to), edge = dir > 0 ? R.y : R.y + R.h; const near = clamp(1 - Math.abs(edge - y) / (H * 0.45), 0, 1);
+    if (near > 0) flareAt(R.x + R.w / 2, edge, 0.6 + near * 2, near * near * 0.5);
+  }
+
+  // ---------- Réveil ----------
+  async function wake(target = 0) {
+    if (busy || cur >= 0) return; busy = true;
+    $('#wake').classList.add('gone'); B.classList.add('waking');
+    try { actx = actx || new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {}
+    const { x, y } = LED();
+    hum();
+    // la lumière devient blanche et grandit, petit à petit
+    await anim(1700, (q) => {
+      const e = eio(q); ledColor = LED0.map((c) => Math.round(lerp(c, 255, e)));
+      draw = () => { ctx.save(); ctx.globalCompositeOperation = 'lighter'; const c = ledColor.join(','); glow(x, y, 120 + 150 * e, 0.12 + 0.14 * e, c); glow(x, y, 26 + 22 * e, 0.6 + 0.3 * e, c); glow(x, y, 4.5 + 3 * e, 1, '255,255,255'); ctx.restore(); };
+    });
+    // elle s'accumule en goutte, d'abord très floue, puis de plus en plus nette
+    await anim(1500, (q) => {
+      const e = eio(q), r = 2 + 8 * e, d = r * (0.3 + 2.4 * e), neck = r * (1 - 0.85 * e), soft = 9 - 6.6 * e;
+      draw = () => { ctx.save(); ctx.globalCompositeOperation = 'lighter'; glow(x, y, 270 - 80 * e, 0.26 - 0.1 * e); glow(x, y, 46, 0.85 - 0.35 * e); ctx.restore(); hanging(x, y + 2, d, r, neck, 9, Math.min(1, 0.4 + e), 1, soft); };
+    });
+    B.classList.add('awake');
+    const pt = getPane(target); pt.el.classList.add('live'); setReveal(pt, 0);
+    const ledWorld = y + camY, d0 = 10 * 2.7;
+    await follow(x, y + 2 + d0 + camY, paneTop(target), y + 2 + d0, {
+      place: () => place(pt),
+      draw: (q) => { const ly = ledWorld - camY; ctx.save(); ctx.globalCompositeOperation = 'lighter'; glow(x, ly, 70, 0.3 * (1 - q)); glow(x, ly, 5, 0.8 * (1 - q)); ctx.restore(); remnant(x, ly + 2, q * 1.6); approach(target, H * 0.5); },
+    });
+    cur = target; ui(); setHash(CH[cur].id + (tabOf.get(cur) ? `/${CH[cur].tabs[tabOf.get(cur)].id}` : ''));
+    phase = 'arrivee';
+    await reveal(target, true);
+    settle();
+  }
+  $('#wake').addEventListener('click', () => wake(0));
+
+  // ---------- Navigation : la molette (ou le doigt) pilote la goutte ----------
+  const dots = $('#dots');
+  dots.innerHTML = CH.map((c, i) => `<button type="button" aria-label="${c.label}"><span>${c.label}</span></button>`).join('');
+  $$('button', dots).forEach((b, i) => b.addEventListener('click', () => autoTo(i)));
+  // Choisir une catégorie, à tout moment : pendant la chute la goutte change de destination ;
+  // pendant l'arrivée, elle repart aussitôt (plus besoin d'attendre la fin de l'animation)
+  function autoTo(i) {
+    if (cur < 0 || i < 0 || i >= CH.length) return;
+    lastIn = performance.now();
+    if (!busy) { want = null; if (i === cur) return; jump = i; pullT = i > cur ? 1.06 : -1.06; return; }
+    if (phase === 'arrivee') { if (i === cur) { want = null; return; } want = i; revealTok.dead = true; return; }
+    if (phase === 'goutte' || phase === 'chute') { jump = i; want = null; ui(); return; }
+    want = i; // réveil en cours
+  }
+  function ui() {
+    $$('button', dots).forEach((b, i) => b.setAttribute('aria-current', i === cur));
+    $('#count').textContent = `${String(cur + 1).padStart(2, '0')} / ${CH.length}`;
+    $('#hint').lastElementChild.textContent = cur === CH.length - 1 ? 'Remontez quand vous voulez' : 'Faites défiler';
+    $$('button', dots).forEach((b, i) => b.classList.toggle('going', i === (jump != null ? jump : cur)));
+  }
+  addEventListener('wheel', (e) => {
+    if (cur < 0) return; e.preventDefault(); if (busy) return;
+    const dy = e.deltaMode === 1 ? e.deltaY * 36 : e.deltaMode === 2 ? e.deltaY * H : e.deltaY;
+    jump = null; lastIn = performance.now(); pullT = clamp(pullT + dy / 900, -1.06, 1.06);
+  }, { passive: false });
+  let ty = null, tp = 0;
+  addEventListener('touchstart', (e) => { ty = e.touches[0].clientY; tp = pullT; }, { passive: true });
+  addEventListener('touchmove', (e) => { if (ty == null || cur < 0 || busy) return; jump = null; lastIn = performance.now(); pullT = clamp(tp + (ty - e.touches[0].clientY) / (H * 0.55), -1.06, 1.06); }, { passive: true });
+  addEventListener('touchend', () => { ty = null; }, { passive: true });
+  addEventListener('keydown', (e) => {
+    if (e.target && e.target.closest && e.target.closest('video, a, button:not(.tab)') && [' ', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key)) return; // le lecteur de la pub garde ses touches
+    if (cur < 0) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); wake(0); } return; }
+    if (['ArrowDown', 'PageDown', ' '].includes(e.key)) { e.preventDefault(); autoTo(cur + 1); }
+    if (['ArrowUp', 'PageUp'].includes(e.key)) { e.preventDefault(); autoTo(cur - 1); }
+    if ((e.key === 'ArrowRight' || e.key === 'ArrowLeft') && !busy) { const p = panes.get(cur); if (p) { const k = clamp(p.k + (e.key === 'ArrowRight' ? 1 : -1), 0, CH[cur].tabs.length - 1); if (k !== p.k) { e.preventDefault(); selectTab(p, k); } } }
+  });
+  $('#mute').addEventListener('click', (e) => { muted = !muted; e.currentTarget.setAttribute('aria-pressed', muted); e.currentTarget.style.opacity = muted ? 0.45 : 1; });
+
+  // Le verre suit un peu la souris (haut / bas), et son reflet suit le curseur
+  addEventListener('pointermove', (e) => {
+    document.documentElement.style.setProperty('--fy', `${((e.clientY / H) - 0.5) * 26}px`);
+    document.documentElement.style.setProperty('--fx', `${((e.clientX / W) - 0.5) * 8}px`);
+    const p = panes.get(cur); if (!p) return;
+    const r = p.el.getBoundingClientRect(), ring = $('.ring', p.el);
+    const cx = clamp(e.clientX, r.left, r.right), cy = clamp(e.clientY, r.top, r.bottom), d = Math.hypot(e.clientX - cx, e.clientY - cy);
+    ring.style.setProperty('--hx', `${((cx - r.left) / r.width) * 100}%`); ring.style.setProperty('--hy', `${((cy - r.top) / r.height) * 100}%`); ring.style.setProperty('--pk', (0.32 + 0.6 * Math.exp(-d / 240)).toFixed(3));
+    p.el.style.setProperty('--mx', `${e.clientX - r.left}px`); p.el.style.setProperty('--my', `${e.clientY - r.top}px`);
+  }, { passive: true });
+
+  addEventListener('resize', () => { layout(); size(); document.documentElement.style.setProperty('--ledy', LED().y + 'px'); if (cur >= 0) { camY = camTo(cur); panes.forEach(place); panes.forEach(glowTo); } });
+  function setHash(id) { try { history.replaceState(null, '', `#${id}`); } catch (e) {} }
+  // Lien direct (…#mails, …#mails/codes, …#tarif) : MIRYS se réveille et la goutte tombe sur la bonne page
+  const [h0, h1] = decodeURIComponent(location.hash.slice(1)).split('/');
+  let hi = CH.findIndex((c) => c.id === h0), hk = -1;
+  if (hi < 0) CH.forEach((c, i) => c.tabs.forEach((t, k) => { if (t.id === h0) { hi = i; hk = k; } }));
+  else if (h1) hk = CH[hi].tabs.findIndex((t) => t.id === h1);
+  if (hi >= 0) { if (hk > 0) tabOf.set(hi, hk); setTimeout(() => wake(hi), 700); }
+})();
+</script>
+
+</body>
+</html>
